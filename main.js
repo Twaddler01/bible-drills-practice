@@ -150,7 +150,7 @@ function create_el(newId, type, parentId, content) {
 // CREATE TITLE AND CONTAINER ELEMENTS
 create_el('title', 'div', 'body');
 title.classList.add('title');
-title.innerHTML = 'BIBLE DRILLS PRACTICE (BLUE)';
+title.innerHTML = 'BIBLE DRILLS PRACTICE (BLUE KJV)';
 
 // UNDERLINE VERSES
 create_el('underline_verses_challenge', 'div', 'body');
