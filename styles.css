@@ -1,0 +1,24 @@
+/* style.css */
+
+body {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none;   /* Safari */
+    -moz-user-select: none;      /* Firefox */
+    -ms-user-select: none;       /* Internet Explorer/Edge */
+    user-select: none;           /* Non-prefixed version, currently supported by Chrome, Opera, and many mobile browsers */
+    touch-action: manipulation;  /* Improve touch behavior on some mobile devices */
+}
+.title {
+    font-size: 24px;
+    font-weight: bold;
+}
+.ulVerse {
+    text-decoration: underline;
+    font-weight: bold;
+}
+.verse {
+
+}
+.ref {
+    font-style: italic;
+}
