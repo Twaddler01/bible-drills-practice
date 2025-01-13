@@ -1,6 +1,104 @@
-// main.js
+// Override console.log, console.warn, and console.error for exporting into a file
+function logExport() {
+    var logs = [];
+    const originalConsoleLog = console.log;
+    const originalConsoleWarn = console.warn;
+    const originalConsoleError = console.error;
+
+    console.log = function (message) {
+        if (typeof message === 'object') {
+            message = JSON.stringify(message);
+        }
+        logs.push(`LOG: ${message}`);
+        originalConsoleLog(message);
+    };
+
+    console.warn = function (message) {
+        if (typeof message === 'object') {
+            message = JSON.stringify(message);
+        }
+        logs.push(`WARNING: ${message}`);
+        originalConsoleWarn(message);
+    };
+
+    console.error = function (message) {
+        if (typeof message === 'object') {
+            message = JSON.stringify(message);
+        }
+        logs.push(`ERROR: ${message}`);
+        originalConsoleError(message);
+    };
+
+    let exportButton = document.createElement('button');
+    exportButton.id = 'exportButton';
+    exportButton.innerHTML = 'Export Logs';
+    document.body.appendChild(exportButton);
+
+    exportButton.addEventListener("click", function () {
+        // Save logs to a file
+        let logString = logs.join('\n');
+
+        // Create a Blob containing the text data
+        const blob = new Blob([logString], { type: 'text/plain' });
+
+        // Create a download link
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = 'logs.txt';
+
+        // Append the link to the document
+        document.body.appendChild(link);
+
+        // Trigger the download
+        link.click();
+
+        // Remove the link from the document
+        document.body.removeChild(link);
+    });
+}
+
+// Allow exporting of HTML to inspect/debug elements
+function htmlExport() {
+    // Create the "Export HTML" button
+    const exportHTMLButton = document.createElement('button');
+    exportHTMLButton.id = 'exportHTMLButton';
+    exportHTMLButton.textContent = 'Export HTML';
+    
+    // Append the button to the document body
+    document.body.appendChild(exportHTMLButton);
+    
+    // Add an event listener to the "Export HTML" button
+    exportHTMLButton.addEventListener("click", function () {
+        // Get the HTML content of the entire document
+        let htmlContent = document.documentElement.outerHTML;
+    
+        // Create a Blob containing the HTML content
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+    
+        // Create a download link
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = 'vsim_page.html';
+    
+        // Append the link to the document
+        document.body.appendChild(link);
+    
+        // Trigger the download
+        link.click();
+    
+        // Remove the link from the document
+        document.body.removeChild(link);
+    });
+}
+
+// START FUNCTIONS
+logExport();
+htmlExport();
+
+// ** Need Quotation Call
 
 // VARIABLES
+// Completion Call
 const bibleVerses = [ 
 // BLUE KJV
     { verse_ul: 'And God saw every thing', verse: ' that he had made, and, behold, it was very good. And the evening and the morning were the sixth day.', ref: 'Genesis 1:31', color: 'blue', vers: 'kjv' },
@@ -160,6 +258,7 @@ const bibleVerses = [
     { verse_ul: 'We love', verse: ' because he first loved us.', ref: '1 John 4:19', color: 'red', vers: 'csb' },
 ];
 
+// Key Passages
 const keyPassages = [
 // BLUE
     { name: 'God&apos;s Covenant with Abraham', ref: 'Genesis 12:1-3', color: 'blue' },
@@ -196,6 +295,7 @@ const keyPassages = [
     { name: 'The Christian’s Armor', ref: 'Ephesians 6:10-20', color: 'red' },
 ];
 
+// Book Call
 const bibleBooks = [
     { book: 'Genesis', ba: 'Genesis, Exodus' },
     { book: 'Exodus' },
@@ -283,6 +383,30 @@ for (let i = 0; i < bibleBooks.length; i++) {
 
 var selectedColor = null;
 var selectedBibleVersion = null;
+
+// CREATE JSON
+function createJSON(dataArray, dataName) {
+
+    document.getElementById('saveButton').addEventListener('click', () => {
+        // Convert array to JSON string
+        const jsonString = JSON.stringify(dataArray, null, 2);
+    
+        // Create a Blob from the JSON string
+        const blob = new Blob([jsonString], { type: 'application/json' });
+    
+        // Create a temporary anchor element
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = dataName + '.json'; 
+
+        // Trigger the download
+        a.click();
+    
+        // Clean up the object URL
+        URL.revokeObjectURL(a.href);
+    });
+}
+createJSON(bibleBooks, 'bibleBooks');
 
 // Main function to create new elements
 function create_el(newId, type, parentId, content) {
@@ -442,7 +566,7 @@ switch (selectedColor) {
 
 // UNDERLINE VERSES
 create_el('underline_verses_challenge', 'div', 'main_container');
-underline_verses_challenge.innerHTML = '* Complete The Verse';
+underline_verses_challenge.innerHTML = '* Completion Call';
 underline_verses_challenge.classList.add('title');
 underline_verses_challenge.style.paddingTop = '24px';
 
@@ -463,12 +587,52 @@ generate_verse_btn.onclick = randomVerse;
 // Create container for verse display
 create_el('display_container', 'div', 'main_container');
 
+// Insert timer div
+create_el('timer_div1', 'div', 'main_container');
+timer_div1.style.color = 'darkred';
+
 // Button to show answer
 create_el('show_answer_btn', 'button', 'main_container');
 show_answer_btn.innerHTML = 'Show Answer';
 show_answer_btn.style.display = 'none'; // Initially hidden
 show_answer_btn.onclick = showAnswer;
 
+//**** WIP
+//TIMER
+// To track active timers by div ID
+const activeTimers = {};
+
+function startCountdownId(num) {
+    const timer_div = document.getElementById('timer_div' + num);
+    timer_div.style.fontWeight = 'bold';
+    timer_div.innerHTML = 'TIMER: 10 seconds';
+
+    // Clear any existing timer for this div
+    if (activeTimers[num]) {
+        clearInterval(activeTimers[num]);
+    }
+
+    // Start a new countdown timer
+    activeTimers[num] = startCountdown(9, timer_div);
+}
+
+// Function to start the countdown timer
+function startCountdown(duration, displayElement) {
+    let timeLeft = duration;
+
+    const timerInterval = setInterval(() => {
+        if (timeLeft > 0) {
+            displayElement.innerHTML = `TIMER: ${timeLeft} seconds`;
+            timeLeft--;
+        } else {
+            clearInterval(timerInterval); // Stop the timer
+            displayElement.innerHTML = 'TIME IS UP!';
+        }
+    }, 1000);
+
+    return timerInterval; // Return the interval ID to manage it
+}
+    
 // Variable to hold current verse details
 let currentVerse;
 
@@ -478,6 +642,13 @@ let index = 0; // To track the current verse being displayed
 
 // Function to generate and display a random verse (in order of shuffled list)
 function randomVerse() {
+    
+// Clear any existing timer for this div
+if (activeTimers[1]) {
+    clearInterval(activeTimers[1]);
+}
+
+    
     // If all verses are shown, reset and reshuffle
     if (index >= shuffledVerses.length) {
         index = 0;
@@ -486,7 +657,6 @@ function randomVerse() {
     } else {
         currentVerse = shuffledVerses[index]; // Get the next verse
         index++; // Increment the index for next time
-        
         // Clear display container and message container
         display_container.innerHTML = '';
         messages.innerHTML = `Random Verse ${index} of ${bibleVersesData.length} completed.`; // Update progress
@@ -495,6 +665,15 @@ function randomVerse() {
         if (currentVerse.verse_ul) {
             display_container.innerHTML += `<span class="ulVerse">${currentVerse.verse_ul}</span>`;
         }
+
+// Create timer
+let DOM_timer_div1 = document.getElementById('timer_div1');
+if (DOM_timer_div1) {
+    DOM_timer_div1.innerHTML = '';
+}
+create_el('timer1_btn', 'button', 'timer_div1');
+timer1_btn.innerHTML = 'START (TIMER)';
+timer1_btn.onclick = () => startCountdownId(1);
 
         // Show the answer button
         show_answer_btn.style.display = 'block'; // Show the button to reveal the answer
@@ -525,7 +704,7 @@ function showAnswer() {
 
 // VERSES BY REFERENCE
 create_el('ref_verses_challenge', 'div', 'main_container');
-ref_verses_challenge.innerHTML = '* Recite The Verse';
+ref_verses_challenge.innerHTML = '* Quotation Call';
 ref_verses_challenge.classList.add('title');
 ref_verses_challenge.style.paddingTop = '24px';
 
@@ -611,9 +790,9 @@ let kpData = create_practice_kp(keyPassages, color);
 
 create_el('kp_container', 'div', 'body');
 
-// KEY PASSAGES BY NAME
+// KEY PASSAGES BY NAME / by ref disabled
 create_el('key_passages_challenge', 'div', 'kp_container');
-key_passages_challenge.innerHTML = '* Key Passages (by name)';
+key_passages_challenge.innerHTML = '* Key Passages';
 key_passages_challenge.classList.add('title');
 key_passages_challenge.style.paddingTop = '24px';
 
@@ -690,6 +869,7 @@ function showAnswerKeyPassages() {
 }
 
 // KEY PASSAGES BY REFERENCE
+/*
 create_el('key_passages_ref_challenge', 'div', 'kp_container');
 key_passages_ref_challenge.innerHTML = '* Key Passages (by reference)';
 key_passages_ref_challenge.classList.add('title');
@@ -766,6 +946,7 @@ function showAnswerKeyPassages_ref() {
     }
     show_answer_btn4.style.display = 'none'; // Hide the button after the answer is shown
 }
+*/
 
 } // End f_kp()
 
@@ -777,7 +958,7 @@ create_el('botb_container', 'div', 'body');
 
 // BOOKS OF THE BIBLE
 create_el('bible_books_challenge', 'div', 'botb_container');
-bible_books_challenge.innerHTML = '* Books of The Bible';
+bible_books_challenge.innerHTML = '* Book Call';
 bible_books_challenge.classList.add('title');
 bible_books_challenge.style.paddingTop = '24px';
 
