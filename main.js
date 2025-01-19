@@ -95,8 +95,6 @@ function htmlExport() {
 //logExport();
 //htmlExport();
 
-// ** Need Quotation Call
-
 // VARIABLES
 // Completion Call
 const bibleVerses = [ 
@@ -567,6 +565,19 @@ switch (selectedColor) {
         e_colorDrill.style.color = 'red';
 }
 
+// Insert timer div
+create_el('timer_div1', 'div', 'main_container');
+timer_div1.style.color = 'darkred';
+
+// Create timer
+let DOM_timer_div1 = document.getElementById('timer_div1');
+if (DOM_timer_div1) {
+    DOM_timer_div1.innerHTML = '';
+}
+create_el('timer1_btn', 'button', 'timer_div1');
+timer1_btn.innerHTML = 'START TIMER';
+timer1_btn.onclick = () => startCountdownId(1);
+
 // UNDERLINE VERSES
 create_el('underline_verses_challenge', 'div', 'main_container');
 underline_verses_challenge.innerHTML = '* Completion Call';
@@ -590,10 +601,6 @@ generate_verse_btn.onclick = randomVerse;
 // Create container for verse display
 create_el('display_container', 'div', 'main_container');
 
-// Insert timer div
-create_el('timer_div1', 'div', 'main_container');
-timer_div1.style.color = 'darkred';
-
 // Button to show answer
 create_el('show_answer_btn', 'button', 'main_container');
 show_answer_btn.innerHTML = 'Show Answer';
@@ -602,21 +609,11 @@ show_answer_btn.onclick = showAnswer;
 
 //**** WIP
 //TIMER
-// To track active timers by div ID
-const activeTimers = {};
-
 function startCountdownId(num) {
     const timer_div = document.getElementById('timer_div' + num);
     timer_div.style.fontWeight = 'bold';
     timer_div.innerHTML = 'TIMER: 10 seconds';
-
-    // Clear any existing timer for this div
-    if (activeTimers[num]) {
-        clearInterval(activeTimers[num]);
-    }
-
-    // Start a new countdown timer
-    activeTimers[num] = startCountdown(9, timer_div);
+    startCountdown(9, timer_div);
 }
 
 // Function to start the countdown timer
@@ -629,10 +626,21 @@ function startCountdown(duration, displayElement) {
             timeLeft--;
         } else {
             clearInterval(timerInterval); // Stop the timer
-            displayElement.innerHTML = 'TIME IS UP!';
+            displayElement.innerHTML = 'TIME IS UP!  ';
+            
+                // RE-Create timer
+    //let DOM_timer_div1 = document.getElementById('timer_div1');
+    //if (DOM_timer_div1) {
+    //    DOM_timer_div1.innerHTML = '';
+    //}
+    create_el('timer1_btn', 'button', 'timer_div1');
+    timer1_btn.innerHTML = 'RESTART TIMER';
+    timer1_btn.onclick = () => startCountdownId(1);
+
+            
         }
     }, 1000);
-
+    
     return timerInterval; // Return the interval ID to manage it
 }
     
@@ -645,12 +653,6 @@ let index = 0; // To track the current verse being displayed
 
 // Function to generate and display a random verse (in order of shuffled list)
 function randomVerse() {
-    
-// Clear any existing timer for this div
-if (activeTimers[1]) {
-    clearInterval(activeTimers[1]);
-}
-
     
     // If all verses are shown, reset and reshuffle
     if (index >= shuffledVerses.length) {
@@ -669,14 +671,6 @@ if (activeTimers[1]) {
             display_container.innerHTML += `<span class="ulVerse">${currentVerse.verse_ul}</span>`;
         }
 
-// Create timer
-let DOM_timer_div1 = document.getElementById('timer_div1');
-if (DOM_timer_div1) {
-    DOM_timer_div1.innerHTML = '';
-}
-create_el('timer1_btn', 'button', 'timer_div1');
-timer1_btn.innerHTML = 'START (TIMER)';
-timer1_btn.onclick = () => startCountdownId(1);
 
         // Show the answer button
         show_answer_btn.style.display = 'block'; // Show the button to reveal the answer
