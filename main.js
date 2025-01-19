@@ -406,7 +406,7 @@ function createJSON(dataArray, dataName) {
         URL.revokeObjectURL(a.href);
     });
 }
-createJSON(bibleBooks, 'bibleBooks');
+//createJSON(bibleBooks, 'bibleBooks');
 
 // Main function to create new elements
 function create_el(newId, type, parentId, content) {
