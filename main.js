@@ -511,6 +511,9 @@ function createForm() {
     form.addEventListener('submit', function(event) {
         event.preventDefault(); // Prevent form submission
 
+        const DOM_main_container = document.getElementById('main_container');
+        if (DOM_main_container) main_container.innerHTML = '';
+
         // Assign the selected values
         selectedColor = document.getElementById('colorSelect').value;
         selectedBibleVersion = document.getElementById('bibleVersionSelect').value;
@@ -576,12 +579,12 @@ messages.classList.add('messages');
 
 // Button to reset and shuffle verses again
 create_el('reset_btn', 'button', 'main_container');
-reset_btn.innerHTML = 'Start Over';
+reset_btn.innerHTML = 'Reset and Randomize Order';
 reset_btn.onclick = resetVerses;
 
 // Create button to generate random verse
 create_el('generate_verse_btn', 'button', 'main_container');
-generate_verse_btn.innerHTML = 'Generate Random Verse';
+generate_verse_btn.innerHTML = 'Show Random Verse';
 generate_verse_btn.onclick = randomVerse;
 
 // Create container for verse display
@@ -714,12 +717,12 @@ messages2.classList.add('messages');
 
 // Button to reset and shuffle verses again
 create_el('reset_btn2', 'button', 'main_container');
-reset_btn2.innerHTML = 'Start Over';
+reset_btn2.innerHTML = 'Reset and Randomize Order';
 reset_btn2.onclick = resetVerses_ref;
 
 // Create button to generate random verse
 create_el('generate_verse_btn2', 'button', 'main_container');
-generate_verse_btn2.innerHTML = 'Generate Random Verse';
+generate_verse_btn2.innerHTML = 'Show Random Verse';
 generate_verse_btn2.onclick = randomVerse_byRef;
 
 // Create container for verse display
@@ -788,7 +791,7 @@ function f_kp(color) {
 
 let kpData = create_practice_kp(keyPassages, color);
 
-create_el('kp_container', 'div', 'body');
+create_el('kp_container', 'div', 'main_container');
 
 // KEY PASSAGES BY NAME / by ref disabled
 create_el('key_passages_challenge', 'div', 'kp_container');
@@ -802,12 +805,12 @@ messages3.classList.add('messages');
 
 // Button to reset and shuffle verses again
 create_el('reset_btn3', 'button', 'kp_container');
-reset_btn3.innerHTML = 'Start Over';
+reset_btn3.innerHTML = 'Reset and Randomize Order';
 reset_btn3.onclick = resetKeyPassages;
 
 // Create button to generate random key passage
 create_el('generate_verse_btn3', 'button', 'kp_container');
-generate_verse_btn3.innerHTML = 'Generate Random Passage';
+generate_verse_btn3.innerHTML = 'Show Random Passage';
 generate_verse_btn3.onclick = randomKeyPassage;
 
 // Create container for verse display
@@ -954,7 +957,7 @@ function showAnswerKeyPassages_ref() {
 function f_booksOfTheBible() {
 
 // BOOKS OF THE BIBLE AREA (parent)
-create_el('botb_container', 'div', 'body');
+create_el('botb_container', 'div', 'main_container');
 
 // BOOKS OF THE BIBLE
 create_el('bible_books_challenge', 'div', 'botb_container');
@@ -968,12 +971,12 @@ messages5.classList.add('messages');
 
 // Button to reset and shuffle books again
 create_el('reset_btn5', 'button', 'botb_container');
-reset_btn5.innerHTML = 'Start Over';
+reset_btn5.innerHTML = 'Reset and Randomize Order';
 reset_btn5.onclick = resetBooksOfBible;
 
 // Create button to generate random books
 create_el('generate_verse_btn5', 'button', 'botb_container');
-generate_verse_btn5.innerHTML = 'Generate Random Books';
+generate_verse_btn5.innerHTML = 'Show Random Book';
 generate_verse_btn5.onclick = randomBooksOfBible;
 
 // Create container for book display
