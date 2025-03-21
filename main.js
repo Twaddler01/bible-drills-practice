@@ -92,8 +92,8 @@ function htmlExport() {
 }
 
 // START FUNCTIONS
-//logExport();
-//htmlExport();
+logExport();
+htmlExport();
 
 // VARIABLES
 // Completion Call
@@ -1032,3 +1032,5 @@ function showAnswerBooksOfBible() {
 }
 
 } // End f_booksOfTheBible()
+
+console.log(JSON.stringify(bibleBooks));
