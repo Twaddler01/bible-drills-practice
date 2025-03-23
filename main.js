@@ -384,6 +384,184 @@ var selectedBibleVersion = null;
 
 
 document.addEventListener("DOMContentLoaded", () => {
+
+class CountdownTimer {
+    constructor(containerId, totalTime) {
+        this.container = document.getElementById(containerId);
+        this.totalTime = totalTime;
+        this.remainingTime = totalTime;
+        this.blocks = [];
+        this.interval = null;
+        this.timeIsUp = false; // Flag to track when time is up
+        this.maxBlocks = 10; // Maximum visible blocks
+
+        this.createUI();
+    }
+
+    createUI() {
+        this.container.innerHTML = ''; // Clear previous content
+        this.blocks = [];
+
+        // Wrapper for styling
+        this.wrapper = document.createElement('div');
+        this.wrapper.classList.add('timer-wrapper');
+
+        // Progress Bar Container
+        this.progressBar = document.createElement('div');
+        this.progressBar.classList.add('progress-bar');
+
+        // Determine block count and size
+        this.blockRatio = Math.ceil(this.totalTime / this.maxBlocks); // How many seconds per block
+        this.displayBlocks = Math.min(this.totalTime, this.maxBlocks); // Number of blocks displayed
+
+        for (let i = 0; i < this.displayBlocks; i++) {
+            let block = document.createElement('div');
+            block.classList.add('block');
+            this.blocks.push(block);
+            this.progressBar.appendChild(block);
+        }
+
+        // Status Text
+        this.statusText = document.createElement('div');
+        this.statusText.classList.add('status-text');
+        this.statusText.textContent = 'READY';
+
+        // Buttons Container
+        this.buttonContainer = document.createElement('div');
+        this.buttonContainer.classList.add('button-container');
+
+        // Start Button
+        this.startButton = document.createElement('button');
+        this.startButton.textContent = 'Start';
+        this.startButton.addEventListener('click', () => this.start());
+
+        // Reset Button
+        this.resetButton = document.createElement('button');
+        this.resetButton.textContent = 'Reset';
+        this.resetButton.addEventListener('click', () => this.reset());
+
+        // Append buttons to button container
+        this.buttonContainer.appendChild(this.startButton);
+        this.buttonContainer.appendChild(this.resetButton);
+
+        // Append elements to wrapper
+        this.wrapper.appendChild(this.progressBar);
+        this.wrapper.appendChild(this.statusText);
+        this.wrapper.appendChild(this.buttonContainer);
+        this.container.appendChild(this.wrapper);
+
+        this.updateColors();
+    }
+
+    updateColors() {
+        this.blocks.forEach((block, index) => {
+            let percentage = ((index + 1) / this.displayBlocks) * 100;
+            block.style.backgroundColor =
+                percentage <= 20 ? 'red' :
+                percentage <= 40 ? 'yellow' : 'green';
+        });
+    }
+
+    start() {
+        if (this.interval) return; // Prevent multiple intervals
+
+        if (this.timeIsUp) {
+            // If time was up, reset blocks and restart countdown
+            this.timeIsUp = false;
+            this.remainingTime = this.totalTime;
+            this.blocks.forEach(block => block.style.visibility = 'visible');
+            this.updateColors();
+        }
+
+        this.statusText.textContent = this.remainingTime; // Set initial countdown display
+
+        this.interval = setInterval(() => {
+            if (this.remainingTime > 0) {
+                this.remainingTime--;
+                let blockIndex = Math.floor(this.remainingTime / this.blockRatio);
+                if (blockIndex < this.blocks.length) {
+                    this.blocks[blockIndex].style.visibility = 'hidden';
+                }
+                this.statusText.textContent = this.remainingTime > 0 ? this.remainingTime : 'TIME IS UP!';
+                this.updateColors();
+            } else {
+                this.stop();
+                this.timeIsUp = true; // Set flag to allow restart on next Start press
+            }
+        }, 1000);
+    }
+
+    stop() {
+        clearInterval(this.interval);
+        this.interval = null;
+    }
+
+    reset() {
+        this.stop();
+        this.remainingTime = this.totalTime;
+        this.timeIsUp = false;
+        this.createUI();
+        this.statusText.textContent = 'READY';
+    }
+}
+
+/*
+// Usage example:
+document.addEventListener('DOMContentLoaded', () => {
+    new CountdownTimer('timer-container', 10); // Only need to provide parent ID
+});
+
+// CSS
+.timer-wrapper {
+    border: 2px solid black;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: max-content;
+    margin: auto;
+}
+
+.progress-bar {
+    display: flex;
+    gap: 2px;
+    width: 200px; 
+    justify-content: space-between;
+}
+
+.block {
+    height: 20px;
+    flex-grow: 1; 
+    background-color: green;
+}
+
+.status-text {
+    margin-top: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.button-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    align-self: flex-start; 
+}
+
+button {
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+// HTML
+<div id="progress-bar"></div>
+*/
+
+
+
+
+
     class ProgressBar {
         constructor({ parentId, val = 0, total = 0 } = {}) {
             this.val = val;
@@ -438,35 +616,31 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         //// temp need other drill call formats
-        call1Format() {
-            let formatted = `<strong><u>${this.verse_ul}</u></strong>`;
-            if (this.answerVisible) {
-                formatted += `${this.verse}<br>- ${this.ref}`;
-            }
-            return formatted;
-        }
+        formatCall(type) {
+            let formatted = '';
         
-        call2Format() {
-            let formatted = `<strong>${this.ref}</strong>`;
-            if (this.answerVisible) {
-                formatted += `<br>${this.verse_ul} ${this.verse}`;
+            switch (type) {
+                case 1:
+                    formatted = `<strong><u>${this.verse_ul}</u></strong>`;
+                    if (this.answerVisible) formatted += `${this.verse}<br>- ${this.ref}`;
+                    break;
+        
+                case 2:
+                    formatted = `<strong>${this.ref}</strong>`;
+                    if (this.answerVisible) formatted += `<br>${this.verse_ul} ${this.verse}`;
+                    break;
+        
+                case 3:
+                    formatted = `<strong>${this.name}</strong>`;
+                    if (this.answerVisible) formatted += `<br>${this.ref}`;
+                    break;
+        
+                case 4:
+                    formatted = `<strong>${this.book}</strong>`;
+                    if (this.answerVisible) formatted += `<br>${this.ba}`;
+                    break;
             }
-            return formatted;
-        }
-
-        call3Format() {
-            let formatted = `<strong>${this.name}</strong>`;
-            if (this.answerVisible) {
-                formatted += `<br>${this.ref}`;
-            }
-            return formatted;
-        }
-
-        call4Format() {
-            let formatted = `<strong>${this.book}</strong>`;
-            if (this.answerVisible) {
-                formatted += `<br>${this.ba}`;
-            }
+        
             return formatted;
         }
     }
@@ -530,10 +704,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function updateDisplay(arg_selectedCallType) {
         const verseContainer = document.getElementById("verseContainer");
-        if (verseContainer && arg_selectedCallType === 'call1') verseContainer.innerHTML = drill.call1Format();
-        if (verseContainer && arg_selectedCallType === 'call2') verseContainer.innerHTML = drill.call2Format();
-        if (verseContainer && arg_selectedCallType === 'call3') verseContainer.innerHTML = drill.call3Format();
-        if (verseContainer && arg_selectedCallType === 'call4') verseContainer.innerHTML = drill.call4Format();
+        if (verseContainer && arg_selectedCallType === 'call1') verseContainer.innerHTML = drill.formatCall(1);
+        if (verseContainer && arg_selectedCallType === 'call2') verseContainer.innerHTML = drill.formatCall(2);
+        if (verseContainer && arg_selectedCallType === 'call3') verseContainer.innerHTML = drill.formatCall(3);
+        if (verseContainer && arg_selectedCallType === 'call4') verseContainer.innerHTML = drill.formatCall(4);
         const toggleButton = document.getElementById("toggleButton");
         if (toggleButton) toggleButton.innerText = drill.answerVisible ? "Hide Answer" : "See Answer";
     }
@@ -567,6 +741,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(docContainer);
     
     docContainer.innerHTML = `
+
+<div id="progress-bar"></div>
+
         <h2>BIBLE DRILLS PRACTICE</h2>
         <div id="selectDiv"></div>
         <div id="selectedOpts"></div>
@@ -577,6 +754,8 @@ document.addEventListener("DOMContentLoaded", () => {
         <div id="callTypeDiv"></div>
         <div id="drillContainer"></div>
     `;
+
+    const timer = new CountdownTimer('progress-bar', 30);
 
     function setupDrillVersionColor() {
         // Clear all sections
