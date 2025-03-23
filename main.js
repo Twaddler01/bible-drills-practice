@@ -421,12 +421,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     class DrillCall {
-        constructor({ verse_ul = "", verse = "", ref = "", color = "", vers = "" } = {}) {
+        constructor({ verse_ul = "", verse = "", ref = "", color = "", vers = "", name = "", book = "", ba = "" } = {}) {
             this.verse_ul = verse_ul;
             this.verse = verse;
             this.ref = ref;
             this.color = color;
             this.vers = vers;
+            this.name = name;
+            this.book = book;
+            this.ba = ba;
             this.answerVisible = false;
         }
 
@@ -435,10 +438,34 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         //// temp need other drill call formats
-        getFormattedVerse() {
+        call1Format() {
             let formatted = `<strong><u>${this.verse_ul}</u></strong>`;
             if (this.answerVisible) {
                 formatted += `${this.verse}<br>- ${this.ref}`;
+            }
+            return formatted;
+        }
+        
+        call2Format() {
+            let formatted = `<strong>${this.ref}</strong>`;
+            if (this.answerVisible) {
+                formatted += `<br>${this.verse_ul} ${this.verse}`;
+            }
+            return formatted;
+        }
+
+        call3Format() {
+            let formatted = `<strong>${this.name}</strong>`;
+            if (this.answerVisible) {
+                formatted += `<br>${this.ref}`;
+            }
+            return formatted;
+        }
+
+        call4Format() {
+            let formatted = `<strong>${this.book}</strong>`;
+            if (this.answerVisible) {
+                formatted += `<br>${this.ba}`;
             }
             return formatted;
         }
@@ -453,19 +480,34 @@ document.addEventListener("DOMContentLoaded", () => {
     let progressBar;
 
     // needs different array arg -- bibleVerses+
-    function filterVerses() {
-        filteredVerses = bibleVerses.filter(v => v.vers === selectedVersion && v.color === selectedColor);
+    function filterVerses(arg_selectedCallType) {
+
+        const drillData = {
+            'call1': bibleVerses,
+            'call2': bibleVerses,
+            'call3': keyPassages,
+            'call4': bibleBooks
+        };
+    
+        // Ensure the selected call type exists in the mapping
+        const selectedArray = drillData[arg_selectedCallType] || [];
+
+        // Check if the selected array contains objects with a 'book' property
+        if (selectedArray.length > 0 && 'book' in selectedArray[0]) {
+            filteredVerses = selectedArray; // Include as-is
+        } else {
+            // Filter based on selected version and color
+            filteredVerses = selectedArray.filter(v => 
+                (!v.vers || v.vers === selectedVersion) && v.color === selectedColor
+            );
+        }
         
         // Shuffle the filtered verses
         filteredVerses.sort(() => Math.random() - 0.5);
         
         currentVerseIndex = 0; // Start at first verse
-        //document.getElementById("nextButton").style.display = "inline-block"; // Show "Next Verse"
-        //document.getElementById("startOverButton").style.display = "none"; // Hide "Start Over"
 
         if (filteredVerses.length === 0) {
-            //document.getElementById("verseContainer").innerHTML = "No verses found.";
-            //document.getElementById("progressBarContainer").innerHTML = "";
             return;
         }
 
@@ -474,33 +516,36 @@ document.addEventListener("DOMContentLoaded", () => {
             progressBar = new ProgressBar({ parentId: "progressBarContainer", val: 0, total: filteredVerses.length });
             progressBar.create();
         }
-        
-        loadVerse();
+
+        loadVerse(arg_selectedCallType);
     }
 
-    function loadVerse() {
+    function loadVerse(arg_selectedCallType) {
         if (filteredVerses.length === 0 || currentVerseIndex >= filteredVerses.length) return;
 
         const verseData = filteredVerses[currentVerseIndex];
         drill = new DrillCall(verseData);
-        updateDisplay();
+        updateDisplay(arg_selectedCallType);
     }
 
-    function updateDisplay() {
+    function updateDisplay(arg_selectedCallType) {
         const verseContainer = document.getElementById("verseContainer");
-        if (verseContainer) verseContainer.innerHTML = drill.getFormattedVerse();
+        if (verseContainer && arg_selectedCallType === 'call1') verseContainer.innerHTML = drill.call1Format();
+        if (verseContainer && arg_selectedCallType === 'call2') verseContainer.innerHTML = drill.call2Format();
+        if (verseContainer && arg_selectedCallType === 'call3') verseContainer.innerHTML = drill.call3Format();
+        if (verseContainer && arg_selectedCallType === 'call4') verseContainer.innerHTML = drill.call4Format();
         const toggleButton = document.getElementById("toggleButton");
         if (toggleButton) toggleButton.innerText = drill.answerVisible ? "Hide Answer" : "See Answer";
     }
 
-    function nextVerse() {
+    function nextVerse(arg_selectedCallType) {
         if (currentVerseIndex + 1 >= filteredVerses.length) {
             completeDrill();
             return;
         }
 
         currentVerseIndex++;
-        loadVerse();
+        loadVerse(arg_selectedCallType);
 
         const progressBarContainer = document.getElementById('progressBarContainer');
         if (progressBarContainer && progressBar) {
@@ -618,7 +663,7 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
 
         let selectedCallType = "";
-    
+
         document.getElementById("callTypeForm").addEventListener("change", function() {
             selectedCallType = document.querySelector('input[name="option"]:checked').value;
 
@@ -643,21 +688,24 @@ document.addEventListener("DOMContentLoaded", () => {
                         <div id="progressBarContainer"></div>
                         <div id="verseContainer"></div>
                         <button id="toggleButton">See Answer</button>
-                        <button id="nextButton">Next Verse</button>
+                        <button id="nextButton">Next Drill</button>
                         <button id="startOverButton" style="display: none;">Start Over</button>
                     `;
                 
                     document.getElementById("toggleButton").addEventListener("click", () => {
                         if (drill) {
                             drill.toggleAnswer();
-                            updateDisplay();
+                            updateDisplay(selectedCallType);
                         }
                     });
                 
-                    document.getElementById("nextButton").addEventListener("click", nextVerse);
+                    document.getElementById("nextButton").addEventListener("click", () => {
+                        nextVerse(selectedCallType);
+                    });                    
+                    
                     document.getElementById("startOverButton").addEventListener("click", startOver);
-                
-                    filterVerses();
+
+                    filterVerses(selectedCallType);
                 }
                 
                 function startOver() {
@@ -665,13 +713,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     progressBar.update(0, filteredVerses.length);
                     setupDrillContainer();
                 }
-
-
-                //// temp, needs the creation of each call type (functions)
-                if (selectedCallType === 'call1') {
-                    setupDrillContainer();
-                }
-
+                setupDrillContainer();
             }
         });
 
