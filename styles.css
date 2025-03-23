@@ -1,5 +1,4 @@
 /* style.css */
-
 body {
     -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none;   /* Safari */
@@ -12,13 +11,34 @@ body {
     font-size: 24px;
     font-weight: bold;
 }
-.ulVerse {
-    text-decoration: underline;
+
+.bar_with_border_container {
+    position: relative;  /* Position relative for inner elements */
+    height: 20px;
+    width: 100%;
+}
+.bar_with_border_fill {
+    background-color: green;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+.bar_with_border_text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Center text */
+    z-index: 1;  /* Ensure text is above the fill bar */
+    white-space: nowrap;  /* Prevent wrapping */
+    font-size: 10px;
     font-weight: bold;
 }
-.verse {
-
-}
-.ref {
-    font-style: italic;
+.bar_with_border_percent {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);  /* Center Y */
+    z-index: 2;  /* Ensure text is above the fill/text bar */
+    font-size: 10px;
 }

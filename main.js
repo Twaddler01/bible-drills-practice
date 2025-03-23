@@ -92,8 +92,8 @@ function htmlExport() {
 }
 
 // START FUNCTIONS
-//logExport();
-//htmlExport();
+logExport();
+htmlExport();
 
 // VARIABLES
 // Completion Call
@@ -382,653 +382,299 @@ for (let i = 0; i < bibleBooks.length; i++) {
 var selectedColor = null;
 var selectedBibleVersion = null;
 
-// CREATE JSON
-function createJSON(dataArray, dataName) {
 
-    document.getElementById('saveButton').addEventListener('click', () => {
-        // Convert array to JSON string
-        const jsonString = JSON.stringify(dataArray, null, 2);
-    
-        // Create a Blob from the JSON string
-        const blob = new Blob([jsonString], { type: 'application/json' });
-    
-        // Create a temporary anchor element
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = dataName + '.json'; 
-
-        // Trigger the download
-        a.click();
-    
-        // Clean up the object URL
-        URL.revokeObjectURL(a.href);
-    });
-}
-//createJSON(bibleBooks, 'bibleBooks');
-
-// Main function to create new elements
-function create_el(newId, type, parentId, content) {
-    let parent_el = document.getElementById(parentId);
-    let new_el = document.createElement(type);
-    
-    if (parent_el) {
-        parent_el.appendChild(new_el);
-    } else if (parentId === 'body') {
-        document.body.appendChild(new_el);
-    } else {
-        parentId.appendChild(new_el);
-    }
-
-    new_el.id = newId;
-    if (content) {
-        new_el.innerHTML = content;
-    }
-}
-
-// Shuffle the verses array for random order display
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
-
-//// WIP
-function create_practice_verses(arrayVar, color, vers) {
-    let filtered_array = arrayVar.filter(a => a.color === color && a.vers === vers);
-    return filtered_array;
-}
-
-function create_practice_kp(arrayVar, color) {
-    let filtered_array = arrayVar.filter(a => a.color === color);
-    return filtered_array;
-}
-
-// CHOOSE COLOR AND VERSION
-// Function to create the select elements and form dynamically
-function createForm() {
-    // Create a form element
-    const form = document.createElement('form');
-    form.id = 'selectionForm';
-
-    // Create the label and select for colors
-    const colorLabel = document.createElement('label');
-    colorLabel.setAttribute('for', 'colorSelect');
-    colorLabel.innerHTML = '<br>Choose a color: ';
-
-    const colorSelect = document.createElement('select');
-    colorSelect.id = 'colorSelect';
-
-    // Options for color select
-    const colors = ['blue', 'green', 'red'];
-    colors.forEach(color => {
-        const option = document.createElement('option');
-        option.value = color;
-        option.textContent = color.charAt(0).toUpperCase() + color.slice(1); // Capitalize the first letter
-        colorSelect.appendChild(option);
-    });
-
-    // Create the label and select for Bible versions
-    const bibleLabel = document.createElement('label');
-    bibleLabel.setAttribute('for', 'bibleVersionSelect');
-    bibleLabel.innerHTML = '<br>Choose a Bible version: ';
-
-    const bibleSelect = document.createElement('select');
-    bibleSelect.id = 'bibleVersionSelect';
-
-    // Options for Bible version select
-    const bibleVersions = ['KJV', 'CSB'];
-    bibleVersions.forEach(version => {
-        const option = document.createElement('option');
-        option.value = version;
-        option.textContent = version;
-        bibleSelect.appendChild(option);
-    });
-
-    const submitLabel = document.createElement('div');
-    submitLabel.style.paddingTop = '10px';
-
-    // Create a submit button
-    const submitButton = document.createElement('button');
-    submitButton.type = 'submit';
-    submitButton.textContent = 'Submit';
-
-    // Append all elements to the form
-    form.appendChild(colorLabel);
-    form.appendChild(colorSelect);
-    form.appendChild(bibleLabel);
-    form.appendChild(bibleSelect);
-    form.appendChild(submitLabel);
-    submitLabel.appendChild(submitButton);
-
-    // Append the form to the body
-    document.body.appendChild(form);
-
-    // Add event listener for form submission
-    form.addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent form submission
-
-        const DOM_main_container = document.getElementById('main_container');
-        if (DOM_main_container) main_container.innerHTML = '';
-
-        // Assign the selected values
-        selectedColor = document.getElementById('colorSelect').value;
-        selectedBibleVersion = document.getElementById('bibleVersionSelect').value;
-
-        selectedColor = selectedColor.toLowerCase();
-        selectedBibleVersion = selectedBibleVersion.toLowerCase();
-
-        f_main(selectedColor, selectedBibleVersion);
-        f_kp(selectedColor);
-        f_booksOfTheBible(); // Always show
-
-        // Output the selections (you can use these values however you like)
-        //console.log('Selected color: ' + selectedColor);
-        //console.log('Selected Bible version: ' + selectedBibleVersion);
-    });
-}
-
-// CREATE MAIN PAGE TITLE
-create_el('page_title', 'div', 'body');
-page_title.classList.add('title');
-page_title.innerHTML = 'CHILDREN&apos;S BIBLE DRILLS: PRACTICE';
-
-// START MAIN FUNCTIONS
-createForm(); // selectedColor, selectedBibleVersion
-
-// MAIN FUNCTION
-function f_main(color, version) {
-
-let bibleVersesData = create_practice_verses(bibleVerses, color, version);
-
-// Labels
-let colorLabel = color.toUpperCase();
-let versionLabel = version.toUpperCase();
-
-// MAIN AREA (parent)
-create_el('main_container', 'div', 'body');
-
-// CREATE TITLE AND CONTAINER ELEMENTS
-create_el('title', 'div', 'main_container');
-title.classList.add('title');
-title.innerHTML = 'CHILDREN&apos;S <span id ="colorDrill">' + colorLabel + '</span> (' + versionLabel + ') BIBLE DRILL PRACTICE';
-let e_colorDrill = document.getElementById('colorDrill');
-switch (selectedColor) {
-    case 'blue':
-        e_colorDrill.style.color = 'blue';
-        break;
-    case 'green':
-        e_colorDrill.style.color = 'green';
-        break;
-    case 'red':
-        e_colorDrill.style.color = 'red';
-}
-
-// Insert timer div
-create_el('timer_div1', 'div', 'main_container');
-timer_div1.style.color = 'darkred';
-
-// Create timer
-let DOM_timer_div1 = document.getElementById('timer_div1');
-if (DOM_timer_div1) {
-    DOM_timer_div1.innerHTML = '';
-}
-create_el('timer1_btn', 'button', 'timer_div1');
-timer1_btn.innerHTML = 'START TIMER';
-timer1_btn.onclick = () => startCountdownId(1);
-
-// UNDERLINE VERSES
-create_el('underline_verses_challenge', 'div', 'main_container');
-underline_verses_challenge.innerHTML = '* Completion Call';
-underline_verses_challenge.classList.add('title');
-underline_verses_challenge.style.paddingTop = '24px';
-
-// Create messages element to display progress and notifications
-create_el('messages', 'div', 'main_container');
-messages.classList.add('messages');
-
-// Button to reset and shuffle verses again
-create_el('reset_btn', 'button', 'main_container');
-reset_btn.innerHTML = 'Reset and Randomize Order';
-reset_btn.onclick = resetVerses;
-
-// Create button to generate random verse
-create_el('generate_verse_btn', 'button', 'main_container');
-generate_verse_btn.innerHTML = 'Show Random Verse';
-generate_verse_btn.onclick = randomVerse;
-
-// Create container for verse display
-create_el('display_container', 'div', 'main_container');
-
-// Button to show answer
-create_el('show_answer_btn', 'button', 'main_container');
-show_answer_btn.innerHTML = 'Show Answer';
-show_answer_btn.style.display = 'none'; // Initially hidden
-show_answer_btn.onclick = showAnswer;
-
-//**** WIP
-//TIMER
-function startCountdownId(num) {
-    const timer_div = document.getElementById('timer_div' + num);
-    timer_div.style.fontWeight = 'bold';
-    timer_div.innerHTML = 'TIMER: 10 seconds';
-    startCountdown(9, timer_div);
-}
-
-// Function to start the countdown timer
-function startCountdown(duration, displayElement) {
-    let timeLeft = duration;
-
-    const timerInterval = setInterval(() => {
-        if (timeLeft > 0) {
-            displayElement.innerHTML = `TIMER: ${timeLeft} seconds`;
-            timeLeft--;
-        } else {
-            clearInterval(timerInterval); // Stop the timer
-            displayElement.innerHTML = 'TIME IS UP!  ';
-            
-                // RE-Create timer
-    //let DOM_timer_div1 = document.getElementById('timer_div1');
-    //if (DOM_timer_div1) {
-    //    DOM_timer_div1.innerHTML = '';
-    //}
-    create_el('timer1_btn', 'button', 'timer_div1');
-    timer1_btn.innerHTML = 'RESTART TIMER';
-    timer1_btn.onclick = () => startCountdownId(1);
-
-            
-        }
-    }, 1000);
-    
-    return timerInterval; // Return the interval ID to manage it
-}
-    
-// Variable to hold current verse details
-let currentVerse;
-
-// Clone and shuffle bibleVersesData for random ordering
-let shuffledVerses = shuffleArray([...bibleVersesData]); // Start with a shuffled array
-let index = 0; // To track the current verse being displayed
-
-// Function to generate and display a random verse (in order of shuffled list)
-function randomVerse() {
-    
-    // If all verses are shown, reset and reshuffle
-    if (index >= shuffledVerses.length) {
-        index = 0;
-        shuffledVerses = shuffleArray([...bibleVersesData]); // Reshuffle the verses
-        messages.innerHTML = 'All verses shown. Starting again!'; // Display message instead of alert
-    } else {
-        currentVerse = shuffledVerses[index]; // Get the next verse
-        index++; // Increment the index for next time
-        // Clear display container and message container
-        display_container.innerHTML = '';
-        messages.innerHTML = `Random Verse ${index} of ${bibleVersesData.length} completed.`; // Update progress
-
-        // Check if `verse_ul` exists and display it
-        if (currentVerse.verse_ul) {
-            display_container.innerHTML += `<span class="ulVerse">${currentVerse.verse_ul}</span>`;
+document.addEventListener("DOMContentLoaded", () => {
+    class ProgressBar {
+        constructor({ parentId, val = 0, total = 0 } = {}) {
+            this.val = val;
+            this.total = total;
+            this.parentId = parentId;
         }
 
+        create() {
+            const parent_element = document.getElementById(this.parentId);
+            if (!parent_element) {
+                console.error(`Parent element with ID "${this.parentId}" not found.`);
+                return;
+            }
 
-        // Show the answer button
-        show_answer_btn.style.display = 'block'; // Show the button to reveal the answer
-    }
-}
+            let progress_percent = this.total > 0 ? (this.val / this.total) * 100 : 0;
+            progress_percent = Math.round(progress_percent * 10) / 10;
 
-// Function to reset verses
-function resetVerses() {
-    index = 0;
-    shuffledVerses = shuffleArray([...bibleVersesData]); // Reshuffle the verses
-    messages.innerHTML = 'Verses reset! You can go through them again.'; // Display reset message
-}
-
-// Function to show the verse and reference
-function showAnswer() {
-    if (currentVerse) {
-        // Check and append `verse` if it exists
-        if (currentVerse.verse) {
-            display_container.innerHTML += `<span class="verse">${currentVerse.verse}</span>`;
+            parent_element.innerHTML = `
+            <div id="status_bar_container" style="width: 100%; border: solid 1px black; box-sizing: border-box; padding: 5px;">
+                <div class="bar_with_border_container" style="position: relative; background: #ddd; width: 100%; height: 30px; border-radius: 5px; overflow: hidden;">
+                    <div class="bar_with_border_fill" style="background-color: green; width: ${progress_percent}%; height: 100%; transition: width 0.3s ease;"></div>
+                    <span class="bar_with_border_text">
+                        ${this.val >= this.total ? "COMPLETE" : `Progress: ${this.val} / ${this.total}`}
+                    </span>
+                </div>
+            </div>
+            `;
         }
-        // Check and append `ref` if it exists
-        if (currentVerse.ref) {
-            display_container.innerHTML += `<br><span class="ref">${currentVerse.ref}</span>`;
+
+        update(val, total) {
+            this.val = val;
+            this.total = total;
+            this.create();
         }
     }
-    show_answer_btn.style.display = 'none'; // Hide the button after the answer is shown
-}
 
-// VERSES BY REFERENCE
-create_el('ref_verses_challenge', 'div', 'main_container');
-ref_verses_challenge.innerHTML = '* Quotation Call';
-ref_verses_challenge.classList.add('title');
-ref_verses_challenge.style.paddingTop = '24px';
+    class DrillCall {
+        constructor({ verse_ul = "", verse = "", ref = "", color = "", vers = "" } = {}) {
+            this.verse_ul = verse_ul;
+            this.verse = verse;
+            this.ref = ref;
+            this.color = color;
+            this.vers = vers;
+            this.answerVisible = false;
+        }
 
-// Create messages element to display progress and notifications
-create_el('messages2', 'div', 'main_container');
-messages2.classList.add('messages');
+        toggleAnswer() {
+            this.answerVisible = !this.answerVisible;
+        }
 
-// Button to reset and shuffle verses again
-create_el('reset_btn2', 'button', 'main_container');
-reset_btn2.innerHTML = 'Reset and Randomize Order';
-reset_btn2.onclick = resetVerses_ref;
+        //// temp need other drill call formats
+        getFormattedVerse() {
+            let formatted = `<strong><u>${this.verse_ul}</u></strong>`;
+            if (this.answerVisible) {
+                formatted += `${this.verse}<br>- ${this.ref}`;
+            }
+            return formatted;
+        }
+    }
 
-// Create button to generate random verse
-create_el('generate_verse_btn2', 'button', 'main_container');
-generate_verse_btn2.innerHTML = 'Show Random Verse';
-generate_verse_btn2.onclick = randomVerse_byRef;
+    let selectedVersion = "";
+    let selectedColor = "";
+    let selectedColorText = "";
+    let filteredVerses = [];
+    let currentVerseIndex = 0; // Start at first verse (0)
+    let drill;
+    let progressBar;
 
-// Create container for verse display
-create_el('display_container2', 'div', 'main_container');
-
-// Button to show answer
-create_el('show_answer_btn2', 'button', 'main_container');
-show_answer_btn2.innerHTML = 'Show Answer';
-show_answer_btn2.style.display = 'none'; // Initially hidden
-show_answer_btn2.onclick = showAnswer_ref;
-
-// Variable to hold current verse details
-let currentVerse2;
-
-// Clone and shuffle bibleVerses for random ordering
-let shuffledVerses2 = shuffleArray([...bibleVersesData]); // Start with a shuffled array
-let index2 = 0; // To track the current verse being displayed
-
-// Function to generate and display a random verse (in order of shuffled list)
-function randomVerse_byRef() {
-    // If all verses are shown, reset and reshuffle
-    if (index2 >= shuffledVerses2.length) {
-        index2 = 0;
-        shuffledVerses2 = shuffleArray([...bibleVersesData]); // Reshuffle the verses
-        messages2.innerHTML = 'All verses shown. Starting again!'; // Display message instead of alert
-    } else {
-        currentVerse2 = shuffledVerses2[index2]; // Get the next verse
-        index2++; // Increment the index for next time
+    // needs different array arg -- bibleVerses+
+    function filterVerses() {
+        filteredVerses = bibleVerses.filter(v => v.vers === selectedVersion && v.color === selectedColor);
         
-        // Clear display container and message container
-        display_container2.innerHTML = '';
-        messages2.innerHTML = `Random Verse ${index2} of ${bibleVersesData.length} completed.`; // Update progress
+        // Shuffle the filtered verses
+        filteredVerses.sort(() => Math.random() - 0.5);
+        
+        currentVerseIndex = 0; // Start at first verse
+        //document.getElementById("nextButton").style.display = "inline-block"; // Show "Next Verse"
+        //document.getElementById("startOverButton").style.display = "none"; // Hide "Start Over"
 
-        // Check if `verse_ul` exists and display it
-        if (currentVerse2.ref) {
-            display_container2.innerHTML += `<span class="ref">${currentVerse2.ref}</span>`;
+        if (filteredVerses.length === 0) {
+            //document.getElementById("verseContainer").innerHTML = "No verses found.";
+            //document.getElementById("progressBarContainer").innerHTML = "";
+            return;
         }
 
-        // Show the answer button
-        show_answer_btn2.style.display = 'block'; // Show the button to reveal the answer
-    }
-}
-
-// Function to reset verses
-function resetVerses_ref() {
-    index2 = 0;
-    shuffledVerses2 = shuffleArray([...bibleVersesData]); // Reshuffle the verses
-    messages2.innerHTML = 'Verses reset! You can go through them again.'; // Display reset message
-}
-
-// Function to show the verse and reference
-function showAnswer_ref() {
-    if (currentVerse2) {
-        // Check and append `verse_ul` and 'verse' if it exists
-        if (currentVerse2.verse_ul && currentVerse2.verse) {
-            display_container2.innerHTML += `<br><span class="verse">${currentVerse2.verse_ul}${currentVerse2.verse}</span>`;
+        const progressBarContainer = document.getElementById('progressBarContainer');
+        if (progressBarContainer) {
+            progressBar = new ProgressBar({ parentId: "progressBarContainer", val: 0, total: filteredVerses.length });
+            progressBar.create();
         }
+        
+        loadVerse();
     }
-    show_answer_btn2.style.display = 'none'; // Hide the button after the answer is shown
-}
 
-} // End main()
+    function loadVerse() {
+        if (filteredVerses.length === 0 || currentVerseIndex >= filteredVerses.length) return;
 
-// KEY PASSAGES
-function f_kp(color) {
+        const verseData = filteredVerses[currentVerseIndex];
+        drill = new DrillCall(verseData);
+        updateDisplay();
+    }
 
-let kpData = create_practice_kp(keyPassages, color);
+    function updateDisplay() {
+        const verseContainer = document.getElementById("verseContainer");
+        if (verseContainer) verseContainer.innerHTML = drill.getFormattedVerse();
+        const toggleButton = document.getElementById("toggleButton");
+        if (toggleButton) toggleButton.innerText = drill.answerVisible ? "Hide Answer" : "See Answer";
+    }
 
-create_el('kp_container', 'div', 'main_container');
-
-// KEY PASSAGES BY NAME / by ref disabled
-create_el('key_passages_challenge', 'div', 'kp_container');
-key_passages_challenge.innerHTML = '* Key Passages';
-key_passages_challenge.classList.add('title');
-key_passages_challenge.style.paddingTop = '24px';
-
-// Create messages element to display progress and notifications
-create_el('messages3', 'div', 'kp_container');
-messages3.classList.add('messages');
-
-// Button to reset and shuffle verses again
-create_el('reset_btn3', 'button', 'kp_container');
-reset_btn3.innerHTML = 'Reset and Randomize Order';
-reset_btn3.onclick = resetKeyPassages;
-
-// Create button to generate random key passage
-create_el('generate_verse_btn3', 'button', 'kp_container');
-generate_verse_btn3.innerHTML = 'Show Random Passage';
-generate_verse_btn3.onclick = randomKeyPassage;
-
-// Create container for verse display
-create_el('display_container3', 'div', 'kp_container');
-
-// Button to show answer
-create_el('show_answer_btn3', 'button', 'kp_container');
-show_answer_btn3.innerHTML = 'Show Answer';
-show_answer_btn3.style.display = 'none'; // Initially hidden
-show_answer_btn3.onclick = showAnswerKeyPassages;
-
-// Variable to hold current verse details
-let current_keyPassage;
-
-// Clone and shuffle key passages for random ordering
-let shuffledKeyPassages = shuffleArray([...kpData]); // Start with a shuffled array
-let index3 = 0; // To track the current verse being displayed
-
-// Function to generate and display a random passage (in order of shuffled list)
-function randomKeyPassage() {
-    // If all passages are shown, reset and reshuffle
-    if (index3 >= shuffledKeyPassages.length) {
-        index3 = 0;
-        shuffledKeyPassages = shuffleArray([...kpData]); // Reshuffle the passages
-        messages3.innerHTML = 'All verses shown. Starting again!'; // Display message instead of alert
-    } else {
-        current_keyPassage = shuffledKeyPassages[index3]; // Get the next verse
-        index3++; // Increment the index for next time
-        // Clear display container and message container
-        display_container3.innerHTML = '';
-        messages3.innerHTML = `Random Key Passage ${index3} of ${kpData.length} completed.`; // Update progress
-
-        // Check if `current_keyPassage` exists and display it
-        if (current_keyPassage.ref) {
-            display_container3.innerHTML += `<span class="ref">${current_keyPassage.name}</span>`;
+    function nextVerse() {
+        if (currentVerseIndex + 1 >= filteredVerses.length) {
+            completeDrill();
+            return;
         }
 
-        // Show the answer button
-        show_answer_btn3.style.display = 'block'; // Show the button to reveal the answer
-    }
-}
+        currentVerseIndex++;
+        loadVerse();
 
-// Function to reset verses
-function resetKeyPassages() {
-    index3 = 0;
-    shuffledKeyPassages = shuffleArray([...kpData]); // Reshuffle the verses
-    messages3.innerHTML = 'Key passages reset! You can go through them again.'; // Display reset message
-}
-
-// Function to show the verse and reference
-function showAnswerKeyPassages() {
-    if (current_keyPassage) {
-        // Check and append `name` and 'verse' if it exists
-        if (current_keyPassage.name) {
-            display_container3.innerHTML += `<br><span class="verse">${current_keyPassage.ref}</span>`;
+        const progressBarContainer = document.getElementById('progressBarContainer');
+        if (progressBarContainer && progressBar) {
+            progressBar.update(currentVerseIndex, filteredVerses.length);
         }
     }
-    show_answer_btn3.style.display = 'none'; // Hide the button after the answer is shown
-}
 
-// KEY PASSAGES BY REFERENCE
-/*
-create_el('key_passages_ref_challenge', 'div', 'kp_container');
-key_passages_ref_challenge.innerHTML = '* Key Passages (by reference)';
-key_passages_ref_challenge.classList.add('title');
-key_passages_ref_challenge.style.paddingTop = '24px';
-
-// Create messages element to display progress and notifications
-create_el('messages4', 'div', 'kp_container');
-messages4.classList.add('messages');
-
-// Button to reset and shuffle verses again
-create_el('reset_btn4', 'button', 'kp_container');
-reset_btn4.innerHTML = 'Start Over';
-reset_btn4.onclick = resetKeyPassages_ref;
-
-// Create button to generate random key passage
-create_el('generate_verse_btn4', 'button', 'kp_container');
-generate_verse_btn4.innerHTML = 'Generate Random Passage Reference';
-generate_verse_btn4.onclick = randomKeyPassage_ref;
-
-// Create container for verse display
-create_el('display_container4', 'div', 'kp_container');
-
-// Button to show answer
-create_el('show_answer_btn4', 'button', 'kp_container');
-show_answer_btn4.innerHTML = 'Show Answer';
-show_answer_btn4.style.display = 'none'; // Initially hidden
-show_answer_btn4.onclick = showAnswerKeyPassages_ref;
-
-// Variable to hold current verse details
-let current_keyPassage_ref;
-
-// Clone and shuffle key passages for random ordering
-let shuffledKeyPassages_ref = shuffleArray([...kpData]); // Start with a shuffled array
-let index4 = 0; // To track the current verse being displayed
-
-// Function to generate and display a random passage (in order of shuffled list)
-function randomKeyPassage_ref() {
-    // If all passages are shown, reset and reshuffle
-    if (index4 >= shuffledKeyPassages_ref.length) {
-        index4 = 0;
-        shuffledKeyPassages_ref = shuffleArray([...kpData]); // Reshuffle the passages
-        messages4.innerHTML = 'All verses shown. Starting again!'; // Display message instead of alert
-    } else {
-        current_keyPassage_ref = shuffledKeyPassages_ref[index4]; // Get the next verse
-        index4++; // Increment the index for next time
-        // Clear display container and message container
-        display_container4.innerHTML = '';
-        messages4.innerHTML = `Random Key Passage ${index4} of ${kpData.length} completed.`; // Update progress
-
-        // Check if `current_keyPassage` exists and display it
-        if (current_keyPassage_ref.ref) {
-            display_container4.innerHTML += `<span class="ref">${current_keyPassage_ref.ref}</span>`;
-        }
-
-        // Show the answer button
-        show_answer_btn4.style.display = 'block'; // Show the button to reveal the answer
+    function completeDrill() {
+        document.getElementById("verseContainer").innerHTML = "Drill complete! Well done!";
+        document.getElementById("nextButton").style.display = "none"; // Hide "Next Verse"
+        document.getElementById("toggleButton").style.display = "none"; // Hide "See Answer"
+        document.getElementById("startOverButton").style.display = "inline-block"; // Show "Start Over"
+        progressBar.update(filteredVerses.length, filteredVerses.length); // Ensure full progress
     }
-}
 
-// Function to reset verses
-function resetKeyPassages_ref() {
-    index4 = 0;
-    shuffledKeyPassages_ref = shuffleArray([...kpData]); // Reshuffle the verses
-    messages4.innerHTML = 'Key passages reset! You can go through them again.'; // Display reset message
-}
 
-// Function to show the verse and reference
-function showAnswerKeyPassages_ref() {
-    if (current_keyPassage_ref) {
-        // Check and append `name` and 'verse' if it exists
-        if (current_keyPassage_ref.name) {
-            display_container4.innerHTML += `<br><span class="verse">${current_keyPassage_ref.name}</span>`;
+
+    const docContainer = document.createElement('div');
+    document.body.appendChild(docContainer);
+    
+    docContainer.innerHTML = `
+        <h2>BIBLE DRILLS PRACTICE</h2>
+        <div id="selectDiv"></div>
+        <div id="selectedOpts"></div>
+        <div id="start_div">
+            <button id="start_btn">Start Practice</button>
+        </div>
+        <br>
+        <div id="callTypeDiv"></div>
+        <div id="drillContainer"></div>
+    `;
+
+    function setupDrillVersionColor() {
+        // Clear all sections
+        const callTypeDiv = document.getElementById("callTypeDiv");
+        if (callTypeDiv) callTypeDiv.innerHTML = '';
+        const drillContainer = document.getElementById('drillContainer');
+        if (drillContainer) drillContainer.innerHTML = '';
+
+        selectedVersion = "";
+        selectedColor = "";
+        selectedColorText = "";
+        updateSelectedOptions();
+        document.getElementById("selectDiv").innerHTML = `   
+            <span><b>Choose book version and color:</b></span><br>
+            <select id="versionSelect">
+                <option value="" selected>---</option>
+                <option value="kjv">KJV</option>
+                <option value="csb">CSB</option>
+            </select>
+            <select id="colorSelect">
+                <option value="" selected>---</option>
+                <option value="blue">Blue</option>
+                <option value="red">Red</option>
+                <option value="green">Green</option>
+            </select>
+        `;
+        
+        document.getElementById("versionSelect").addEventListener("change", (e) => {
+            selectedVersion = e.target.value;
+            updateSelectedOptions();
+            filterVerses();
+        });
+    
+        document.getElementById("colorSelect").addEventListener("change", (e) => {
+            selectedColorText = e.target.options[e.target.selectedIndex].text;
+            selectedColor = e.target.value;
+            updateSelectedOptions();
+            filterVerses();
+        });
+    }
+    setupDrillVersionColor();
+
+    function updateSelectedOptions() {
+        document.getElementById('selectedOpts').innerHTML = `<b>Selected Version:</b> ${selectedVersion.toUpperCase()}<br><b>Selected Color:</b> ${selectedColorText}`;
+        const start_btn = document.getElementById('start_btn');
+        if (!start_btn) {
+            const start_div = document.getElementById('start_div');
+            start_div.innerHTML = '<button id="start_btn">Start Practice</button>';
+            choose_options();
         }
     }
-    show_answer_btn4.style.display = 'none'; // Hide the button after the answer is shown
-}
-*/
-
-} // End f_kp()
-
-// **** FOR ANY COLOR/VERSE -- ALWAYS SHOW
-function f_booksOfTheBible() {
-
-// BOOKS OF THE BIBLE AREA (parent)
-create_el('botb_container', 'div', 'main_container');
-
-// BOOKS OF THE BIBLE
-create_el('bible_books_challenge', 'div', 'botb_container');
-bible_books_challenge.innerHTML = '* Book Call';
-bible_books_challenge.classList.add('title');
-bible_books_challenge.style.paddingTop = '24px';
-
-// Create messages element. to display progress and notifications
-create_el('messages5', 'div', 'botb_container');
-messages5.classList.add('messages');
-
-// Button to reset and shuffle books again
-create_el('reset_btn5', 'button', 'botb_container');
-reset_btn5.innerHTML = 'Reset and Randomize Order';
-reset_btn5.onclick = resetBooksOfBible;
-
-// Create button to generate random books
-create_el('generate_verse_btn5', 'button', 'botb_container');
-generate_verse_btn5.innerHTML = 'Show Random Book';
-generate_verse_btn5.onclick = randomBooksOfBible;
-
-// Create container for book display
-create_el('display_container5', 'div', 'botb_container');
-
-// Button to show answer
-create_el('show_answer_btn5', 'button', 'botb_container');
-show_answer_btn5.innerHTML = 'Show Answer';
-show_answer_btn5.style.display = 'none'; // Initially hidden
-show_answer_btn5.onclick = showAnswerBooksOfBible;
-
-// Variable to hold current verse details
-let current_BooksOfBible;
-
-// Clone and shuffle key passages for random ordering
-let shuffledBooksOfBible = shuffleArray([...bibleBooks]); // Start with a shuffled array
-let index5 = 0; // To track the current verse being displayed
-
-// Function to generate and display a random passage (in order of shuffled list)
-function randomBooksOfBible() {
-    // If all passages are shown, reset and reshuffle
-    if (index5 >= shuffledBooksOfBible.length) {
-        index5 = 0;
-        shuffledBooksOfBible = shuffleArray([...bibleBooks]); // Reshuffle the passages
-        messages4.innerHTML = 'All verses shown. Starting again!'; // Display message instead of alert
-    } else {
-        current_BooksOfBible = shuffledBooksOfBible[index5]; // Get the next verse
-        index5++; // Increment the index for next time
-        // Clear display container and message container
-        display_container5.innerHTML = '';
-        messages5.innerHTML = `Random Bible Book ${index5} of ${bibleBooks.length} completed.`; // Update progress
-
-        // Check if `current_keyPassage` exists and display it
-        if (current_BooksOfBible.book) {
-            display_container5.innerHTML += `${current_BooksOfBible.book}`;
-        }
-
-        // Show the answer button
-        show_answer_btn5.style.display = 'block'; // Show the button to reveal the answer
+    updateSelectedOptions();
+    
+    // Chosen options
+    function choose_options() {
+        document.getElementById('start_btn').addEventListener("click", () => {
+            if (selectedVersion === '' || selectedColor === '') {
+                document.getElementById('selectedOpts').innerHTML = 'Please choose a Color and Version';
+                return;
+            }
+            document.getElementById("selectDiv").innerHTML = '';
+            document.getElementById('start_btn').remove();
+            const start_div = document.getElementById('start_div');
+            start_div.innerHTML = '<button id="reset_btn">Select Different Color or Version</button>';
+            document.getElementById('reset_btn').addEventListener("click", () => {
+                setupDrillVersionColor();
+            });
+            
+            setupDrillCall();
+            filterVerses();
+        });
     }
-}
+    choose_options();
+    
+    function setupDrillCall() {
+        document.getElementById("callTypeDiv").innerHTML = `   
+            <span><b>Choose call type:</b></span><br>
+            <form id="callTypeForm">
+            <div><label><input type="radio" name="option" value="call1"> Completion Call</label></div>
+            <div><label><input type="radio" name="option" value="call2"> Quotation Call</label></div>
+            <div><label><input type="radio" name="option" value="call3"> Key Passage Call</label></div>
+            <div><label><input type="radio" name="option" value="call4"> Book Call</label></div>
+            </form>
+        `;
 
-// Function to reset verses
-function resetBooksOfBible() {
-    index5 = 0;
-    shuffledBooksOfBible = shuffleArray([...bibleBooks]); // Reshuffle the verses
-    messages5.innerHTML = 'Bible Books reset! You can go through them again.'; // Display reset message
-}
+        let selectedCallType = "";
+    
+        document.getElementById("callTypeForm").addEventListener("change", function() {
+            selectedCallType = document.querySelector('input[name="option"]:checked').value;
 
-// Function to show the verse and reference
-function showAnswerBooksOfBible() {
-    if (current_BooksOfBible) {
-        // Check and append `name` and 'verse' if it exists
-        if (current_BooksOfBible.ba) {
-            display_container5.innerHTML += `<br><span class="verse">${current_BooksOfBible.ba}</span>`;
-        }
+            let selectedOption = document.querySelector('input[name="option"]:checked');
+            if (selectedOption) {
+                let selectedText = selectedOption.parentElement.textContent.trim();
+
+                document.getElementById("callTypeDiv").innerHTML = `
+                    <span><b>Call type:</b></span><br>
+                    ${selectedText}<br>
+                    <button id="changeCall_btn">Select Different Drill</button>
+                `;
+                
+                document.getElementById('changeCall_btn').addEventListener("click", () => {
+                    document.getElementById("drillContainer").innerHTML = '';
+                    setupDrillCall();
+                });
+
+                function setupDrillContainer() {
+                    document.getElementById("drillContainer").innerHTML = `
+                        <span><h3>DRILL PRACTICE:</h3></span>
+                        <div id="progressBarContainer"></div>
+                        <div id="verseContainer"></div>
+                        <button id="toggleButton">See Answer</button>
+                        <button id="nextButton">Next Verse</button>
+                        <button id="startOverButton" style="display: none;">Start Over</button>
+                    `;
+                
+                    document.getElementById("toggleButton").addEventListener("click", () => {
+                        if (drill) {
+                            drill.toggleAnswer();
+                            updateDisplay();
+                        }
+                    });
+                
+                    document.getElementById("nextButton").addEventListener("click", nextVerse);
+                    document.getElementById("startOverButton").addEventListener("click", startOver);
+                
+                    filterVerses();
+                }
+                
+                function startOver() {
+                    currentVerseIndex = 0;
+                    progressBar.update(0, filteredVerses.length);
+                    setupDrillContainer();
+                }
+
+
+                //// temp, needs the creation of each call type (functions)
+                if (selectedCallType === 'call1') {
+                    setupDrillContainer();
+                }
+
+            }
+        });
+
     }
-    show_answer_btn5.style.display = 'none'; // Hide the button after the answer is shown
-}
 
-} // End f_booksOfTheBible()
+});
