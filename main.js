@@ -92,8 +92,8 @@ function htmlExport() {
 }
 
 // DEBUGGING FUNCTIONS
-logExport();
-htmlExport();
+//logExport();
+//htmlExport();
 
 // Global variables to store data
 let bibleVerses = [];
