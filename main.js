@@ -92,8 +92,8 @@ function htmlExport() {
 }
 
 // DEBUGGING FUNCTIONS
-//logExport();
-//htmlExport();
+logExport();
+htmlExport();
 
 // Global variables to store data
 let bibleVerses = [];
@@ -234,7 +234,25 @@ document.addEventListener("DOMContentLoaded", () => {
             document.addEventListener('touchmove', doDrag, { passive: false });
             document.addEventListener('touchend', stopDrag);
         }
-    
+
+        moveToCenter() {
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            const windowWidth = this.windowDiv.offsetWidth;
+            const windowHeight = this.windowDiv.offsetHeight;
+            
+            // Calculate center position
+            const left = (viewportWidth - windowWidth) / 2;
+            const top = (viewportHeight - windowHeight) / 2;
+            
+            // Apply new position
+            this.windowDiv.style.position = 'fixed'; // Ensure it's positioned relative to the viewport
+            this.windowDiv.style.left = `${left}px`;
+            this.windowDiv.style.top = `${top}px`;
+            this.windowDiv.style.zIndex = '1000'; // Bring to front
+        }
+
         closeWindow() {
             this.windowDiv.remove();
         }
@@ -247,135 +265,139 @@ document.addEventListener("DOMContentLoaded", () => {
 // Pass the container to DraggableWindow
 //new DraggableWindow("Timer", divContainer);
 
-    class CountdownTimer {
-        constructor(containerId, totalTime) {
-            this.container = document.getElementById(containerId);
-            this.totalTime = totalTime;
-            this.remainingTime = totalTime;
-            this.blocks = [];
-            this.interval = null;
-            this.timeIsUp = false;
-            this.createUI();
-        }
-    
-        createUI() {
-            this.container.innerHTML = ''; // Clear previous content
-            this.blocks = [];
-    
-            // Wrapper for styling
-            this.wrapper = document.createElement('div');
-            this.wrapper.classList.add('timer-wrapper');
-    
-            // Progress Bar Container
-            this.progressBar = document.createElement('div');
-            this.progressBar.classList.add('progress-bar');
-    
-            // Adjust block count to match total seconds
-            this.blockRatio = 1; // Each block represents 1 second now
-            this.displayBlocks = this.totalTime; // Blocks equal total time
-    
-            for (let i = 0; i < this.displayBlocks; i++) {
-                let block = document.createElement('div');
-                block.classList.add('block');
-                block.style.visibility = 'visible'; // Start fully visible
-                block.style.backgroundColor = 'green'; // Default color
-                block.style.width = `${100 / this.displayBlocks}%`; // Distribute evenly
-                this.blocks.push(block);
-                this.progressBar.appendChild(block);
-            }
-    
-            // Status Text
-            this.statusText = document.createElement('div');
-            this.statusText.classList.add('status-text');
-            this.statusText.textContent = 'READY';
-    
-            // Buttons Container
-            this.buttonContainer = document.createElement('div');
-            this.buttonContainer.classList.add('button-container');
-    
-            // Start Button
-            this.startButton = document.createElement('button');
-            this.startButton.textContent = 'Start';
-            this.startButton.addEventListener('click', () => this.start());
-    
-            // Reset Button
-            this.resetButton = document.createElement('button');
-            this.resetButton.textContent = 'Reset';
-            this.resetButton.addEventListener('click', () => this.reset());
-    
-            // Append buttons to button container
-            this.buttonContainer.appendChild(this.startButton);
-            this.buttonContainer.appendChild(this.resetButton);
-    
-            // Append elements to wrapper
-            this.wrapper.appendChild(this.progressBar);
-            this.wrapper.appendChild(this.statusText);
-            this.wrapper.appendChild(this.buttonContainer);
-            this.container.appendChild(this.wrapper);
-        }
-    
-        start() {
-            if (this.interval) return; // Prevent multiple intervals
-    
-            if (this.timeIsUp) {
-                // Reset state if restarting
-                this.timeIsUp = false;
-                this.remainingTime = this.totalTime;
-                this.blocks.forEach(block => {
-                    block.style.visibility = 'visible';
-                    block.style.backgroundColor = 'green';
-                });
-            }
-    
-            this.statusText.textContent = this.remainingTime; // Set initial countdown display
-    
-            this.interval = setInterval(() => {
-                if (this.remainingTime > 0) {
-                    this.remainingTime--;
-    
-                    let blockIndex = this.totalTime - this.remainingTime - 1; // Correct index
-    
-                    // Remove blocks from **RIGHT to LEFT**
-                    if (blockIndex < this.blocks.length) {
-                        let reverseIndex = this.blocks.length - 1 - blockIndex;
-                        this.blocks[reverseIndex].style.visibility = 'hidden';
-                    }
-    
-                    // Calculate percentage remaining
-                    let percentage = (this.remainingTime / this.totalTime) * 100;
-    
-                    // Change colors based on percentage
-                    let color = percentage <= 20 ? 'red' :
-                                percentage <= 40 ? 'yellow' : 'green';
-    
-                    // Apply color change to visible blocks
-                    this.blocks.forEach(block => {
-                        if (block.style.visibility === 'visible') {
-                            block.style.backgroundColor = color;
-                        }
-                    });
-    
-                    this.statusText.textContent = this.remainingTime > 0 ? this.remainingTime : 'TIME IS UP!';
-                } else {
-                    this.stop();
-                    this.timeIsUp = true; // Set flag to allow restart on next Start press
-                }
-            }, 1000);
-        }
-    
-        stop() {
-            clearInterval(this.interval);
-            this.interval = null;
-        }
-    
-        reset() {
-            this.stop();
-            this.remainingTime = this.totalTime;
-            this.timeIsUp = false;
-            this.createUI();
-            this.statusText.textContent = 'READY';
-        }
+class CountdownTimer {
+    constructor(containerId, totalTime) {
+        this.container = document.getElementById(containerId);
+        this.totalTime = totalTime;
+        this.remainingTime = totalTime;
+        this.blocks = [];
+        this.interval = null;
+        this.timeIsUp = false;
+        this.createUI();
     }
+
+    createUI() {
+        this.container.innerHTML = ''; // Clear previous content
+        this.blocks = [];
+
+        // Wrapper for styling
+        this.wrapper = document.createElement('div');
+        this.wrapper.classList.add('timer-wrapper');
+
+        // Progress Bar Container
+        this.progressBar = document.createElement('div');
+        this.progressBar.classList.add('progress-bar');
+        this.progressBar.style.visibility = 'hidden'; // Initially hidden
+
+        // Create blocks for countdown
+        this.displayBlocks = this.totalTime;
+
+        for (let i = 0; i < this.displayBlocks; i++) {
+            let block = document.createElement('div');
+            block.classList.add('block');
+            block.style.visibility = 'hidden'; // Initially hidden
+            block.style.backgroundColor = 'lightgreen';
+            block.style.width = `${100 / this.displayBlocks}%`;
+            this.blocks.push(block);
+            this.progressBar.appendChild(block);
+        }
+
+        // Status Text
+        this.statusText = document.createElement('div');
+        this.statusText.classList.add('status-text');
+        this.statusText.textContent = 'READY';
+
+        // Buttons Container
+        this.buttonContainer = document.createElement('div');
+        this.buttonContainer.classList.add('button-container');
+
+        // Start Button
+        this.startButton = document.createElement('button');
+        this.startButton.textContent = 'Start';
+        this.startButton.addEventListener('click', () => this.start());
+
+        // Reset Button
+        this.resetButton = document.createElement('button');
+        this.resetButton.textContent = 'Reset';
+        this.resetButton.addEventListener('click', () => this.reset());
+
+        // Append buttons to button container
+        this.buttonContainer.appendChild(this.startButton);
+        this.buttonContainer.appendChild(this.resetButton);
+
+        // Append elements to wrapper
+        this.wrapper.appendChild(this.progressBar);
+        this.wrapper.appendChild(this.statusText);
+        this.wrapper.appendChild(this.buttonContainer);
+        this.container.appendChild(this.wrapper);
+    }
+
+    start() {
+        if (this.interval) return; // Prevent multiple intervals
+
+        if (this.timeIsUp) {
+            // Reset state if restarting
+            this.timeIsUp = false;
+            this.remainingTime = this.totalTime;
+            this.blocks.forEach(block => {
+                block.style.visibility = 'visible';
+                block.style.backgroundColor = 'lightgreen';
+            });
+        }
+
+        // Show the progress bar when starting
+        this.progressBar.style.visibility = 'visible';
+        this.blocks.forEach(block => block.style.visibility = 'visible');
+
+        this.statusText.textContent = this.remainingTime; // Set initial countdown display
+
+        this.interval = setInterval(() => {
+            if (this.remainingTime > 0) {
+                this.remainingTime--;
+
+                let blockIndex = this.totalTime - this.remainingTime - 1;
+
+                // Remove blocks from **RIGHT to LEFT**
+                if (blockIndex < this.blocks.length) {
+                    let reverseIndex = this.blocks.length - 1 - blockIndex;
+                    this.blocks[reverseIndex].style.visibility = 'hidden';
+                }
+
+                // Calculate percentage remaining
+                let percentage = (this.remainingTime / this.totalTime) * 100;
+
+                // Change colors based on percentage
+                let color = percentage <= 20 ? 'red' :
+                            percentage <= 40 ? 'yellow' : 'lightgreen';
+
+                // Apply color change to visible blocks
+                this.blocks.forEach(block => {
+                    if (block.style.visibility === 'visible') {
+                        block.style.backgroundColor = color;
+                    }
+                });
+
+                this.statusText.textContent = this.remainingTime > 0 ? this.remainingTime : 'TIME IS UP!';
+            } else {
+                this.stop();
+                this.timeIsUp = true;
+            }
+        }, 1000);
+    }
+
+    stop() {
+        clearInterval(this.interval);
+        this.interval = null;
+    }
+
+    reset() {
+        this.stop();
+        this.remainingTime = this.totalTime;
+        this.timeIsUp = false;
+        this.createUI();
+        this.statusText.textContent = 'READY';
+    }
+}
 /*
 // Usage example:
 document.addEventListener('DOMContentLoaded', () => {
@@ -402,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             parent_element.innerHTML = `
             <div id="status_bar_container" style="width: 100%; border: solid 1px black; box-sizing: border-box; padding: 5px;">
-                <div class="bar_with_border_container" style="position: relative; background: #ddd; width: 100%; height: 30px; border-radius: 5px; overflow: hidden;">
+                <div class="bar_with_border_container container" style="position: relative; width: 100%; height: 30px; border-radius: 5px; overflow: hidden;">
                     <div class="bar_with_border_fill" style="background-color: green; width: ${progress_percent}%; height: 100%; transition: width 0.3s ease;"></div>
                     <span class="bar_with_border_text">
                         ${this.val >= this.total ? "COMPLETE" : `Progress: ${this.val} / ${this.total}`}
@@ -436,29 +458,28 @@ document.addEventListener('DOMContentLoaded', () => {
             this.answerVisible = !this.answerVisible;
         }
 
-        //// temp need other drill call formats
         formatCall(type) {
             let formatted = '';
         
             switch (type) {
                 case 1:
                     formatted = `<strong><u>${this.verse_ul}</u></strong>`;
-                    if (this.answerVisible) formatted += `${this.verse}<br>- ${this.ref}`;
+                    formatted += `<span style="visibility: ${this.answerVisible ? 'visible' : 'hidden'};"> ${this.verse}<br>- ${this.ref}</span>`;
                     break;
         
                 case 2:
                     formatted = `<strong>${this.ref}</strong>`;
-                    if (this.answerVisible) formatted += `<br>${this.verse_ul} ${this.verse}`;
+                    formatted += `<br><span style="visibility: ${this.answerVisible ? 'visible' : 'hidden'};">${this.verse_ul} ${this.verse}</span>`;
                     break;
         
                 case 3:
                     formatted = `<strong>${this.name}</strong>`;
-                    if (this.answerVisible) formatted += `<br>${this.ref}`;
+                    formatted += `<br><span style="visibility: ${this.answerVisible ? 'visible' : 'hidden'};">${this.ref}</span>`;
                     break;
         
                 case 4:
                     formatted = `<strong>${this.book}</strong>`;
-                    if (this.answerVisible) formatted += `<br>${this.ba}`;
+                    formatted += `<br><span style="visibility: ${this.answerVisible ? 'visible' : 'hidden'};">${this.ba}</span>`;
                     break;
             }
         
@@ -474,7 +495,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let drill;
     let progressBar;
 
-    // needs different array arg -- bibleVerses+
     function filterVerses(arg_selectedCallType) {
 
         const drillData = {
@@ -559,9 +579,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const docContainer = document.createElement('div');
     docContainer.id = 'docContainer';
     document.body.appendChild(docContainer);
+    docContainer.style.width = '90%';
 
     docContainer.innerHTML = `
-        <div id="progress-bar"></div>
         <h2>BIBLE DRILLS PRACTICE</h2>
         <div id="selectDiv"></div>
         <div id="selectedOpts"></div>
@@ -571,6 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <br>
         <div id="callTypeDiv"></div>
         <div id="drillContainer"></div>
+        <div id="progress-bar"></div>
     `;
 
     function setupDrillVersionColor() {
@@ -680,12 +701,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 function setupDrillContainer() {
                     document.getElementById("drillContainer").innerHTML = `
                         <span><h3>DRILL PRACTICE:</h3></span>
-                        <button id="showTimer">Show 10 second Timer</button>
-                        <div id="progressBarContainer"></div>
-                        <div id="verseContainer"></div>
+                        <div id="verseContainer" class="container" style="padding-bottom: 10px;"></div>
                         <button id="toggleButton">See Answer</button>
                         <button id="nextButton">Next Drill</button>
                         <button id="startOverButton" style="display: none;">Start Over</button>
+                        <div id="progressBarContainer"></div>
+                        <h2>TOOLS</h2>
+                        <button id="showTimer">Show 10 second Timer</button>
                     `;
             
                     const showTimerButton = document.getElementById("showTimer");
@@ -718,7 +740,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                             // Create the draggable window
                             timerWindow = new DraggableWindow("Timer", progressBarDiv);
-                    
+                            timerWindow.moveToCenter();
+            
                             // Update button text
                             showTimerButton.textContent = "Hide 10 Second Timer";
                     
