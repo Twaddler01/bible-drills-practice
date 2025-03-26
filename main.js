@@ -131,6 +131,8 @@ async function loadAllJsonFiles() {
 
 loadAllJsonFiles();
 
+// ************************
+
 // Load DOM
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -234,7 +236,25 @@ document.addEventListener("DOMContentLoaded", () => {
             document.addEventListener('touchmove', doDrag, { passive: false });
             document.addEventListener('touchend', stopDrag);
         }
-    
+
+        moveToCenter() {
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            const windowWidth = this.windowDiv.offsetWidth;
+            const windowHeight = this.windowDiv.offsetHeight;
+            
+            // Calculate center position
+            const left = (viewportWidth - windowWidth) / 2;
+            const top = (viewportHeight - windowHeight) / 2;
+            
+            // Apply new position
+            this.windowDiv.style.position = 'fixed'; // Ensure it's positioned relative to the viewport
+            this.windowDiv.style.left = `${left}px`;
+            this.windowDiv.style.top = `${top}px`;
+            this.windowDiv.style.zIndex = '1000'; // Bring to front
+        }
+
         closeWindow() {
             this.windowDiv.remove();
         }
@@ -247,135 +267,139 @@ document.addEventListener("DOMContentLoaded", () => {
 // Pass the container to DraggableWindow
 //new DraggableWindow("Timer", divContainer);
 
-    class CountdownTimer {
-        constructor(containerId, totalTime) {
-            this.container = document.getElementById(containerId);
-            this.totalTime = totalTime;
-            this.remainingTime = totalTime;
-            this.blocks = [];
-            this.interval = null;
-            this.timeIsUp = false;
-            this.createUI();
-        }
-    
-        createUI() {
-            this.container.innerHTML = ''; // Clear previous content
-            this.blocks = [];
-    
-            // Wrapper for styling
-            this.wrapper = document.createElement('div');
-            this.wrapper.classList.add('timer-wrapper');
-    
-            // Progress Bar Container
-            this.progressBar = document.createElement('div');
-            this.progressBar.classList.add('progress-bar');
-    
-            // Adjust block count to match total seconds
-            this.blockRatio = 1; // Each block represents 1 second now
-            this.displayBlocks = this.totalTime; // Blocks equal total time
-    
-            for (let i = 0; i < this.displayBlocks; i++) {
-                let block = document.createElement('div');
-                block.classList.add('block');
-                block.style.visibility = 'visible'; // Start fully visible
-                block.style.backgroundColor = 'green'; // Default color
-                block.style.width = `${100 / this.displayBlocks}%`; // Distribute evenly
-                this.blocks.push(block);
-                this.progressBar.appendChild(block);
-            }
-    
-            // Status Text
-            this.statusText = document.createElement('div');
-            this.statusText.classList.add('status-text');
-            this.statusText.textContent = 'READY';
-    
-            // Buttons Container
-            this.buttonContainer = document.createElement('div');
-            this.buttonContainer.classList.add('button-container');
-    
-            // Start Button
-            this.startButton = document.createElement('button');
-            this.startButton.textContent = 'Start';
-            this.startButton.addEventListener('click', () => this.start());
-    
-            // Reset Button
-            this.resetButton = document.createElement('button');
-            this.resetButton.textContent = 'Reset';
-            this.resetButton.addEventListener('click', () => this.reset());
-    
-            // Append buttons to button container
-            this.buttonContainer.appendChild(this.startButton);
-            this.buttonContainer.appendChild(this.resetButton);
-    
-            // Append elements to wrapper
-            this.wrapper.appendChild(this.progressBar);
-            this.wrapper.appendChild(this.statusText);
-            this.wrapper.appendChild(this.buttonContainer);
-            this.container.appendChild(this.wrapper);
-        }
-    
-        start() {
-            if (this.interval) return; // Prevent multiple intervals
-    
-            if (this.timeIsUp) {
-                // Reset state if restarting
-                this.timeIsUp = false;
-                this.remainingTime = this.totalTime;
-                this.blocks.forEach(block => {
-                    block.style.visibility = 'visible';
-                    block.style.backgroundColor = 'green';
-                });
-            }
-    
-            this.statusText.textContent = this.remainingTime; // Set initial countdown display
-    
-            this.interval = setInterval(() => {
-                if (this.remainingTime > 0) {
-                    this.remainingTime--;
-    
-                    let blockIndex = this.totalTime - this.remainingTime - 1; // Correct index
-    
-                    // Remove blocks from **RIGHT to LEFT**
-                    if (blockIndex < this.blocks.length) {
-                        let reverseIndex = this.blocks.length - 1 - blockIndex;
-                        this.blocks[reverseIndex].style.visibility = 'hidden';
-                    }
-    
-                    // Calculate percentage remaining
-                    let percentage = (this.remainingTime / this.totalTime) * 100;
-    
-                    // Change colors based on percentage
-                    let color = percentage <= 20 ? 'red' :
-                                percentage <= 40 ? 'yellow' : 'green';
-    
-                    // Apply color change to visible blocks
-                    this.blocks.forEach(block => {
-                        if (block.style.visibility === 'visible') {
-                            block.style.backgroundColor = color;
-                        }
-                    });
-    
-                    this.statusText.textContent = this.remainingTime > 0 ? this.remainingTime : 'TIME IS UP!';
-                } else {
-                    this.stop();
-                    this.timeIsUp = true; // Set flag to allow restart on next Start press
-                }
-            }, 1000);
-        }
-    
-        stop() {
-            clearInterval(this.interval);
-            this.interval = null;
-        }
-    
-        reset() {
-            this.stop();
-            this.remainingTime = this.totalTime;
-            this.timeIsUp = false;
-            this.createUI();
-            this.statusText.textContent = 'READY';
-        }
+class CountdownTimer {
+    constructor(containerId, totalTime) {
+        this.container = document.getElementById(containerId);
+        this.totalTime = totalTime;
+        this.remainingTime = totalTime;
+        this.blocks = [];
+        this.interval = null;
+        this.timeIsUp = false;
+        this.createUI();
     }
+
+    createUI() {
+        this.container.innerHTML = ''; // Clear previous content
+        this.blocks = [];
+
+        // Wrapper for styling
+        this.wrapper = document.createElement('div');
+        this.wrapper.classList.add('timer-wrapper');
+
+        // Progress Bar Container
+        this.progressBar = document.createElement('div');
+        this.progressBar.classList.add('progress-bar');
+        this.progressBar.style.visibility = 'hidden'; // Initially hidden
+
+        // Create blocks for countdown
+        this.displayBlocks = this.totalTime;
+
+        for (let i = 0; i < this.displayBlocks; i++) {
+            let block = document.createElement('div');
+            block.classList.add('block');
+            block.style.visibility = 'hidden'; // Initially hidden
+            block.style.backgroundColor = 'lightgreen';
+            block.style.width = `${100 / this.displayBlocks}%`;
+            this.blocks.push(block);
+            this.progressBar.appendChild(block);
+        }
+
+        // Status Text
+        this.statusText = document.createElement('div');
+        this.statusText.classList.add('status-text');
+        this.statusText.textContent = 'READY';
+
+        // Buttons Container
+        this.buttonContainer = document.createElement('div');
+        this.buttonContainer.classList.add('button-container');
+
+        // Start Button
+        this.startButton = document.createElement('button');
+        this.startButton.textContent = 'Start';
+        this.startButton.addEventListener('click', () => this.start());
+
+        // Reset Button
+        this.resetButton = document.createElement('button');
+        this.resetButton.textContent = 'Reset';
+        this.resetButton.addEventListener('click', () => this.reset());
+
+        // Append buttons to button container
+        this.buttonContainer.appendChild(this.startButton);
+        this.buttonContainer.appendChild(this.resetButton);
+
+        // Append elements to wrapper
+        this.wrapper.appendChild(this.progressBar);
+        this.wrapper.appendChild(this.statusText);
+        this.wrapper.appendChild(this.buttonContainer);
+        this.container.appendChild(this.wrapper);
+    }
+
+    start() {
+        if (this.interval) return; // Prevent multiple intervals
+
+        if (this.timeIsUp) {
+            // Reset state if restarting
+            this.timeIsUp = false;
+            this.remainingTime = this.totalTime;
+            this.blocks.forEach(block => {
+                block.style.visibility = 'visible';
+                block.style.backgroundColor = 'lightgreen';
+            });
+        }
+
+        // Show the progress bar when starting
+        this.progressBar.style.visibility = 'visible';
+        this.blocks.forEach(block => block.style.visibility = 'visible');
+
+        this.statusText.textContent = this.remainingTime; // Set initial countdown display
+
+        this.interval = setInterval(() => {
+            if (this.remainingTime > 0) {
+                this.remainingTime--;
+
+                let blockIndex = this.totalTime - this.remainingTime - 1;
+
+                // Remove blocks from **RIGHT to LEFT**
+                if (blockIndex < this.blocks.length) {
+                    let reverseIndex = this.blocks.length - 1 - blockIndex;
+                    this.blocks[reverseIndex].style.visibility = 'hidden';
+                }
+
+                // Calculate percentage remaining
+                let percentage = (this.remainingTime / this.totalTime) * 100;
+
+                // Change colors based on percentage
+                let color = percentage <= 20 ? 'red' :
+                            percentage <= 40 ? 'yellow' : 'lightgreen';
+
+                // Apply color change to visible blocks
+                this.blocks.forEach(block => {
+                    if (block.style.visibility === 'visible') {
+                        block.style.backgroundColor = color;
+                    }
+                });
+
+                this.statusText.textContent = this.remainingTime > 0 ? this.remainingTime : 'TIME IS UP!';
+            } else {
+                this.stop();
+                this.timeIsUp = true;
+            }
+        }, 1000);
+    }
+
+    stop() {
+        clearInterval(this.interval);
+        this.interval = null;
+    }
+
+    reset() {
+        this.stop();
+        this.remainingTime = this.totalTime;
+        this.timeIsUp = false;
+        this.createUI();
+        this.statusText.textContent = 'READY';
+    }
+}
 /*
 // Usage example:
 document.addEventListener('DOMContentLoaded', () => {
@@ -402,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             parent_element.innerHTML = `
             <div id="status_bar_container" style="width: 100%; border: solid 1px black; box-sizing: border-box; padding: 5px;">
-                <div class="bar_with_border_container" style="position: relative; background: #ddd; width: 100%; height: 30px; border-radius: 5px; overflow: hidden;">
+                <div class="bar_with_border_container container" style="position: relative; width: 100%; height: 30px; border-radius: 5px; overflow: hidden;">
                     <div class="bar_with_border_fill" style="background-color: green; width: ${progress_percent}%; height: 100%; transition: width 0.3s ease;"></div>
                     <span class="bar_with_border_text">
                         ${this.val >= this.total ? "COMPLETE" : `Progress: ${this.val} / ${this.total}`}
@@ -436,29 +460,28 @@ document.addEventListener('DOMContentLoaded', () => {
             this.answerVisible = !this.answerVisible;
         }
 
-        //// temp need other drill call formats
         formatCall(type) {
             let formatted = '';
         
             switch (type) {
                 case 1:
                     formatted = `<strong><u>${this.verse_ul}</u></strong>`;
-                    if (this.answerVisible) formatted += `${this.verse}<br>- ${this.ref}`;
+                    formatted += `<span style="visibility: ${this.answerVisible ? 'visible' : 'hidden'};"> ${this.verse}<br>- ${this.ref}</span>`;
                     break;
         
                 case 2:
                     formatted = `<strong>${this.ref}</strong>`;
-                    if (this.answerVisible) formatted += `<br>${this.verse_ul} ${this.verse}`;
+                    formatted += `<br><span style="visibility: ${this.answerVisible ? 'visible' : 'hidden'};">${this.verse_ul} ${this.verse}</span>`;
                     break;
         
                 case 3:
                     formatted = `<strong>${this.name}</strong>`;
-                    if (this.answerVisible) formatted += `<br>${this.ref}`;
+                    formatted += `<br><span style="visibility: ${this.answerVisible ? 'visible' : 'hidden'};">${this.ref}</span>`;
                     break;
         
                 case 4:
                     formatted = `<strong>${this.book}</strong>`;
-                    if (this.answerVisible) formatted += `<br>${this.ba}`;
+                    formatted += `<br><span style="visibility: ${this.answerVisible ? 'visible' : 'hidden'};">${this.ba}</span>`;
                     break;
             }
         
@@ -470,11 +493,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedColor = "";
     let selectedColorText = "";
     let filteredVerses = [];
+    let allFilteredVerses = [];
     let currentVerseIndex = 0; // Start at first verse (0)
     let drill;
     let progressBar;
 
-    // needs different array arg -- bibleVerses+
     function filterVerses(arg_selectedCallType) {
 
         const drillData = {
@@ -506,11 +529,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const progressBarContainer = document.getElementById('progressBarContainer');
-        if (progressBarContainer) {
-            progressBar = new ProgressBar({ parentId: "progressBarContainer", val: 0, total: filteredVerses.length });
-            progressBar.create();
-        }
+        //const progressBarContainer = document.getElementById('progressBarContainer');
+        // debug
+        //if (progressBarContainer) {
+            //progressBar = new ProgressBar({ parentId: "progressBarContainer", val: 0, total: filteredVerses.length });
+            //progressBar.create();
+        //}
 
         loadVerse(arg_selectedCallType);
     }
@@ -559,10 +583,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const docContainer = document.createElement('div');
     docContainer.id = 'docContainer';
     document.body.appendChild(docContainer);
+    docContainer.style.width = '90%';
 
     docContainer.innerHTML = `
-        <div id="progress-bar"></div>
-        <h2>BIBLE DRILLS PRACTICE</h2>
+        <h2>BIBLE <br>DRILLS <br>PRACTICE</h2>
         <div id="selectDiv"></div>
         <div id="selectedOpts"></div>
         <div id="start_div">
@@ -570,7 +594,10 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <br>
         <div id="callTypeDiv"></div>
+        <br>
+        <div id="customContent"></div>
         <div id="drillContainer"></div>
+        <div id="progress-bar"></div>
     `;
 
     function setupDrillVersionColor() {
@@ -602,14 +629,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById("versionSelect").addEventListener("change", (e) => {
             selectedVersion = e.target.value;
             updateSelectedOptions();
-            filterVerses();
         });
     
         document.getElementById("colorSelect").addEventListener("change", (e) => {
             selectedColorText = e.target.options[e.target.selectedIndex].text;
             selectedColor = e.target.value;
             updateSelectedOptions();
-            filterVerses();
         });
     }
     setupDrillVersionColor();
@@ -641,7 +666,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             setupDrillCall();
-            filterVerses();
         });
     }
     choose_options();
@@ -676,17 +700,141 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById("drillContainer").innerHTML = '';
                     setupDrillCall();
                 });
+                
+                function choose_customContent() {
+
+                    let selectedDrillContent = "";
+                    document.getElementById("customContent").innerHTML = `
+                        <div id="drillContentTitle">
+                            <span><b>Select Drill Content:</b></span>
+                        </div>
+                        <form id="drillContent_radio">
+                    
+                        <div><label><input type="radio" name="drillContent" value="all"> All</label></div>
+                        <div><label id="customLabel"><input type="radio" name="drillContent" value="custom"> Custom (select)</label></div>
+                        </form>
+                        <button id="drillContentChange_btn" style="display: none;">Select Different Drill Content</button>
+                        <!-- Modal for selecting 'ref' values -->
+                        <div id="refSelectionModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+                            background:black; padding:15px; border:1px solid black; z-index:1000; width: 300px;">
+                            <p>Select References:</p>
+                            <div id="refOptionsContainer" style="display: flex; max-height: 200px; overflow-y: auto;">
+                                <div id="refOptionsColumn1" style="flex: 1; padding-right: 10px;"></div>
+                                <div id="refOptionsColumn2" style="flex: 1;"></div>
+                            </div>
+                            <button id="confirmSelection">Confirm</button>
+                        </div>
+                    `;
+                    
+                    document.getElementById('drillContent_radio').addEventListener("change", () => {
+                        
+                        filterVerses(selectedCallType);
+                    
+                        selectedDrillContent = document.querySelector('input[name="drillContent"]:checked').value;
+                    
+                        let drillContentOption = document.querySelector('input[name="drillContent"]:checked');
+                        if (drillContentOption) {
+                            let selectedDrillContentOption = drillContentOption.parentElement.textContent.trim();
+                    
+                            document.getElementById("drillContentTitle").innerHTML = `
+                                <span><b>Selected Drill Content:</b></span><br>
+                                ${selectedDrillContentOption}<br>
+                            `;
+                    
+                            // Clear Elements
+                            document.getElementById('drillContent_radio').remove();
+                        
+                            const e_drillContentChange_btn = document.getElementById('drillContentChange_btn');
+                            e_drillContentChange_btn.style.display = 'block';
+                            e_drillContentChange_btn.addEventListener("click", () => {
+                                startOver();
+                            });
+                    
+                        }
+                    
+                        if (selectedDrillContent === 'all') {
+                            setupDrillContainer();
+                            //// debug - progress bar
+                            return;
+                        }
+                    
+                        const uniqueRefs = [...new Set(filteredVerses.map(v => v.ref))];
+                        const modal = document.getElementById('refSelectionModal');
+                        const column1 = document.getElementById('refOptionsColumn1');
+                        const column2 = document.getElementById('refOptionsColumn2');
+                    
+                        // Clear previous options
+                        column1.innerHTML = '';
+                        column2.innerHTML = '';
+                    
+                        // Split the options into two columns
+                        uniqueRefs.forEach((ref, index) => {
+                            const label = document.createElement('label');
+                            label.innerHTML = `<input type="checkbox" value="${ref}"> ${ref}`;
+                            (index % 2 === 0 ? column1 : column2).appendChild(label);
+                            (index % 2 === 0 ? column1 : column2).appendChild(document.createElement('br'));
+                        });
+                    
+                        // Show modal
+                        modal.style.display = 'block';
+                    
+                        // Handle selection confirmation
+                        const customLabel = document.getElementById('customLabel');
+                        
+                        document.getElementById('confirmSelection').onclick = () => {
+                        
+                            const selectedRefs = [...document.querySelectorAll('#refOptionsContainer input:checked')].map(input => input.value);
+                            const allRadio = document.querySelector('input[name="drillContent"][value="all"]');
+                            const e_drillContentTitle = document.getElementById('drillContentTitle');
+                        
+                            // Reset if nothing is selected
+                            if (selectedRefs.length === 0) {
+                                if (allRadio) allRadio.checked = true;
+                                modal.style.display = 'none';
+                                // Update text with 'all' (default)
+                                e_drillContentTitle.innerHTML = '<span><b>Selected Drill Content:</b></span><br>All';
+                                return;
+                            }
+                        
+                            // Update text with count
+                            if (selectedRefs.length === filteredVerses.length) {
+                                e_drillContentTitle.innerHTML = '<span><b>Selected Drill Content:</b></span><br>All';
+                            } else {
+                                e_drillContentTitle.innerHTML = `
+                                    <span><b>Selected Drill Content:</b></span><br>
+                                    Custom (${selectedRefs.length} selected)
+                                `;
+                            }
+                        
+                            // Update filtered array
+                            filteredVerses = filteredVerses.filter(v => selectedRefs.includes(v.ref));
+
+                            // Hide modal
+                            modal.style.display = 'none';
+                            
+                        };
+                    });
+                }
+//// temp
+//choose_customContent();
 
                 function setupDrillContainer() {
                     document.getElementById("drillContainer").innerHTML = `
                         <span><h3>DRILL PRACTICE:</h3></span>
-                        <button id="showTimer">Show 10 second Timer</button>
-                        <div id="progressBarContainer"></div>
-                        <div id="verseContainer"></div>
+                        <div id="verseContainer" class="container" style="padding-bottom: 10px;"></div>
                         <button id="toggleButton">See Answer</button>
                         <button id="nextButton">Next Drill</button>
                         <button id="startOverButton" style="display: none;">Start Over</button>
+                        <div id="progressBarContainer"></div>
+                        <h2>TOOLS</h2>
+                        <button id="showTimer">Show 10 second Timer</button>
                     `;
+                    
+                    if (document.getElementById('progressBarContainer')) {
+                        progressBar = new ProgressBar({ parentId: "progressBarContainer", val: 0, total: filteredVerses.length });
+                        progressBar.create();
+                    }
+                    //console.log('progressBarContainer found...');
             
                     const showTimerButton = document.getElementById("showTimer");
                     let timerWindow = null; // Track the timer window
@@ -718,7 +866,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                             // Create the draggable window
                             timerWindow = new DraggableWindow("Timer", progressBarDiv);
-                    
+                            timerWindow.moveToCenter();
+            
                             // Update button text
                             showTimerButton.textContent = "Hide 10 Second Timer";
                     
@@ -744,8 +893,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     });                    
                     
                     document.getElementById("startOverButton").addEventListener("click", startOver);
-
-                    filterVerses(selectedCallType);
+                    
+                    // debug
+                    //choose_customContent();
                 }
                 
                 function startOver() {
@@ -753,7 +903,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     progressBar.update(0, filteredVerses.length);
                     setupDrillContainer();
                 }
-                setupDrillContainer();
+                // debug
+                //if (progressBar) progressBar.update(0, filteredVerses.length);
+                //setupDrillContainer();
+                choose_customContent();
             }
         });
 
